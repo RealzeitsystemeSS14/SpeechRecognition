@@ -172,8 +172,11 @@ int decode()
 void * listenThread(void *arg)
 {
     printf("Listen Thread: init sphinx...\n");
-    sphinxInit();
-    recordInit();
+    if(!sphinxInit())
+        exit(-1);
+    
+    if(!recordInit()
+        exit(-1);
     
     while(!exitApp)
     {
