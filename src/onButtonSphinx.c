@@ -175,7 +175,7 @@ void * listenThread(void *arg)
     if(!sphinxInit())
         exit(-1);
     
-    if(!recordInit()
+    if(!recordInit())
         exit(-1);
     
     while(!exitApp)
