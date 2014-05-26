@@ -11,16 +11,6 @@
 ps_decoder_t *ps;
 ad_rec_t *ad;
 cont_ad_t *c_ad;
-cmd_ln_t *config;
-
-static const arg_t cont_args_def[] = {
-    POCKETSPHINX_OPTIONS,
-    { "-df",
-      ARG_STRING,
-      NULL,
-      "Device file of audio device." },
-    CMDLN_EMPTY_OPTION
-};
 
 int decode()
 {
@@ -120,11 +110,12 @@ int printResult()
 
 int sphinxInit()
 {
-    config = cmd_ln_init(NULL, cont_args_def, TRUE,
+    cmd_ln_t *config;
+
+    config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
                          "-lm", "1048.lm",
                          "-dict", "1048.dic",
-                         "-df", "/dev/dsp1",
                          //"-lm", MODELDIR "/lm/en/turtle.DMP",
                          //"-dict", MODELDIR "/lm/en/turtle.dic",
                          NULL);
@@ -155,7 +146,7 @@ int sphinxClose()
 
 int recordInit()
 {
-    ad = ad_open_dev(cmd_ln_str_r(config, "-df"), (int)cmd_ln_float32_r(config, "-samprate"));
+    ad = ad_open();
     if (ad == NULL) {
         printf("Error opening recording device.\n");
         return 0;
