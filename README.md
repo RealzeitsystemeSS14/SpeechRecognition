@@ -35,9 +35,25 @@ options snd-usb-audio index=1
 ```
 
 * Sphinx hat unter Raspbian Probleme mit __/dev/dsp__ es sollte immer auf __/dev/dsp1__ zugegriffen werden
+* um das USB Gerät als default Audiogerät auszuwählen, muss in die Datei __/etc/asound.conf__ folgendes eingetragen werden
+
+```
+pcm.!default {
+    type plug
+    slave {
+        pcm "hw:1,0"
+    }
+}
+ctl.!default {
+    type hw
+    card 1
+}
+```
+
+__Hilfreiche Links__
 
 * http://www.linuxcircle.com/2013/05/08/raspberry-pi-microphone-setup-with-usb-sound-card/
-
+* https://sites.google.com/site/observing/Home/speech-recognition-with-the-raspberry-pi
 
 ---
 
@@ -55,7 +71,13 @@ sudo apt-get install pulseaudio
 
 ### pocketsphinx
 
-* zuerst muss __sphinx base__ installiert werden
+* folgende Pakete müssen zuerst installiert werden
+
+```
+sudo apt-get install bison libasound2-dev
+```
+
+* nun muss __sphinx base__ installiert werden
 
 ```
 wget -O sphinxbase-0.8.tar.gz http://sourceforge.net/projects/cmusphinx/files/sphinxbase/0.8/sphinxbase-0.8.tar.gz/download

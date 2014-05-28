@@ -1,0 +1,13 @@
+#!/bin/sh
+
+BASEDIR=$(dirname $0)
+CURRDIR=$PWD
+
+cd $BASEDIR
+mkdir -p build
+cd build
+cmake ..
+make
+cp ../dictionaries/* ./
+
+cd $CURRDIR
