@@ -6,7 +6,7 @@
 
 ```
 sudo apt-get install screen
-sudo apt-get install git vim
+sudo apt-get install git vim cmake
 ```
 
 ---
