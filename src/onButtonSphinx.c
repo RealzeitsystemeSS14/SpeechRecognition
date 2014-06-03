@@ -70,7 +70,7 @@ int printResult()
     printf("Result => %s, uttid: %s, score: %d\n", hyp, uttid, score);
 
     if (strcmp(hyp, "left") == 0)
-        return 2;
+        return 0;
 
     return 1;
 }
@@ -217,11 +217,11 @@ void *listenThread(void *arg)
             printf("Listen Thread: starting to decode...\n");
             pthread_barrier_wait(&startBarrier);
             if(!decode())
-                setExitApp(1);
+                exit(-1);
             printf("Listen Thread: decoding finished...\n");
             
-            if (printResult() == 2)
-                setExitApp(1);
+            if (!printResult())
+                exit(-1);
             
             pthread_barrier_wait(&endBarrier);
         } else {
