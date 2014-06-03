@@ -14,6 +14,8 @@ volatile int exitApp;
 volatile int run;
 
 pthread_t thread;
+pthread_mutex_t runMutex;
+pthread_mutex_t exitAppMutex;
 pthread_barrier_t startBarrier;
 pthread_barrier_t endBarrier;
 
@@ -23,6 +25,36 @@ cont_ad_t *c_ad;
 cmd_ln_t *config;
 
 struct sigaction sa;
+
+void setExitApp(int p_exitApp)
+{
+	pthread_mutex_lock(&exitAppMutex);
+	exitApp = p_exitApp;
+	pthread_mutex_unlock(&exitAppMutex);
+}
+
+int getExitApp()
+{
+	pthread_mutex_lock(&exitAppMutex);
+	int result = exitApp;
+	pthread_mutex_unlock(&exitAppMutex);
+	return result;
+}
+
+void setRun(int p_run)
+{
+	pthread_mutex_lock(&runMutex);
+	run = p_run;
+	pthread_mutex_unlock(&runMutex);
+}
+
+int getRun()
+{
+	pthread_mutex_lock(&runMutex);
+	int result = run;
+	pthread_mutex_unlock(&runMutex);
+	return result;
+}
 
 int printResult()
 {
@@ -126,12 +158,22 @@ int decode()
         return 0;
     }
     
+	//check if not silent
+	while ((ret = cont_ad_read(c_ad, buf, BUFFER_SIZE)) == 0)
+        usleep(1000);
+	
     if (ps_start_utt(ps, NULL) < 0) {
         printf("Failed to start utterance.\n");
         return 0;
     }
+	
+	ret = ps_process_raw(ps, buf, BUFFER_SIZE, 0, 0);
+    if (ret < 0) {
+        printf("Error decoding.\n");
+        return 0;
+    }
     
-    while(run)
+    do
     {
         ret = cont_ad_read(c_ad, buf, BUFFER_SIZE);
 
@@ -147,9 +189,9 @@ int decode()
             }
         } else {
             //no data
-            usleep(50000);
+            usleep(1000);
         }
-    }
+    } while(getRun());
     
     ad_stop_rec(ad);
     while (ad_read(ad, buf, BUFFER_SIZE) >= 0);
@@ -159,7 +201,7 @@ int decode()
     return 1;
 }
 
-void * listenThread(void *arg)
+void *listenThread(void *arg)
 {
     printf("Listen Thread: init sphinx...\n");
     if(!sphinxInit())
@@ -168,23 +210,23 @@ void * listenThread(void *arg)
     if(!recordInit())
         exit(-1);
     
-    while(!exitApp)
+    while(!getExitApp())
     {
-        if(run)
+        if(getRun())
         {
             printf("Listen Thread: starting to decode...\n");
             pthread_barrier_wait(&startBarrier);
             if(!decode())
-                exitApp = 1;
+                setExitApp(1);
             printf("Listen Thread: decoding finished...\n");
             
             if (printResult() == 2)
-                exitApp = 1;
+                setExitApp(1);
             
             pthread_barrier_wait(&endBarrier);
-        }
-        
-        usleep(50000);
+        } else {
+			usleep(1000);
+		}
     }
     
     recordClose();
@@ -197,10 +239,11 @@ void * listenThread(void *arg)
 void startThread()
 {
     printf("Starting listen thread...\n");
-    exitApp = 0;
-    run = 0;
+    setExitApp(0);
+    setRun(0);
     pthread_barrier_init(&startBarrier, NULL, 2);
     pthread_barrier_init(&endBarrier, NULL, 2);
+	pthread_mutex_init(&runMutex, NULL);
     pthread_create(&thread, NULL, listenThread, NULL);
 }
 
@@ -213,8 +256,6 @@ void joinThread()
 
 void sighandler(int sig)
 {
-    run = 0;
-    exitApp = 1;
     exit(0);
 }
 
@@ -233,16 +274,16 @@ int main(int argc, char **argv)
     setSignalAction();
     startThread();
 
-    while (!exitApp) {
+    while (!getExitApp()) {
         
         printf("Press return to start recording.\n");
         getchar();
-        run = 1;
+        setRun(1);
         pthread_barrier_wait(&startBarrier);
         
         printf("Press return to end recording.\n");
         getchar();
-        run = 0;
+        setRun(0);
         pthread_barrier_wait(&endBarrier);
         
         printf("Recording stopped.\n");
