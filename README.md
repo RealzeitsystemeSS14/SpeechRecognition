@@ -110,4 +110,4 @@ __Beispiel:__
 Es wird "Light" gesagt, ausgegeben wird aber "Light Light Light On On Light On". Dies deutet auf ein stark verrauschtes Signal (zu hohe Verstärkung)
 oder ein kaum wahrnehmbares Signal (zu niedriege Verstärkung) hin.
 
-Abhilfe hat hier der Einsatz von __pulseaudio__ anstatt __alsa__ gebracht.
+Abhilfe hat hier die Installation von __libasound2-dev__ gebracht. Auch wenn diese Bibliothek nicht installiert ist, kompiliert pocketsphinx anstandslos. Zur Laufzeit kommt jedoch die Warnung, dass die Mikrofonverstärkung nicht eingestellt werden konnte. Nach Installation der Bibliothek, müssen pocketsphinx und sphinxbase __komplett gelöscht__ und die Schritte zu deren Installtion wiederholt werden.
