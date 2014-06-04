@@ -19,12 +19,16 @@ if (sphinx_FOUND)
     link_directories(${sphinx_LIBRARY_DIRS})
     set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${sphinx_CFLAGS})
 
-    add_executable(recordCommand "src/recordCommand.c")
+    add_executable(recordCommand "src/test/recordCommand.c")
     target_link_libraries(recordCommand ${sphinx_LIBRARIES})
     
-    add_executable(testSphinx "src/testSphinx.c")
+    add_executable(testSphinx "src/test/testSphinx.c")
     target_link_libraries(testSphinx ${sphinx_LIBRARIES})
     
-    add_executable(onButtonSphinx "src/onButtonSphinx.c")
+    add_executable(onButtonSphinx "src/test/onButtonSphinx.c")
     target_link_libraries(onButtonSphinx ${sphinx_LIBRARIES})
+    
+    file(GLOB RTSPEECH_SRC "src/*.c" "src/*.h")
+    add_executable(RTSpeech ${RTSPEECH_SRC})
+    target_link_libraries(RTSpeech ${sphinx_LIBRARIES})
 endif (sphinx_FOUND)
