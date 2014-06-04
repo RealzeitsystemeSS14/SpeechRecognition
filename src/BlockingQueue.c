@@ -49,6 +49,7 @@ void enqueueBlockingQueue(blockingQueue_t *p_queue, void *p_element)
 		p_queue->last->next = element;
 		element->prev = p_queue->last;
 		element->next = NULL;
+		p_queue->last = element;
 	}
 	
 	++p_queue->size;
@@ -65,18 +66,19 @@ void* dequeueBlockingQueue(blockingQueue_t* p_queue)
 	while(isEmptyBlockingQueue(p_queue))
 		pthread_cond_wait(&p_queue->popCondition, &p_queue->mutex);
 	
-	blockingQueueElement_t *resultElement = p_queue->first->data;
+	blockingQueueElement_t *resultElement = p_queue->first;
 	void *result = resultElement->data;
+	--p_queue->size;
 	
 	//check if there are other elements in queue
-	if(p_queue->size > 1) {
-		p_queue->first = p_queue->first->next;
-		p_queue->first->prev = NULL;
-	} else {
+	if(p_queue->size == 0) {
 		p_queue->first = NULL;
 		p_queue->last = NULL;
+	} else {
+		p_queue->first = p_queue->first->next;
+		p_queue->first->prev = NULL;
 	}
-	--p_queue->size;
+	
 	free(resultElement);
 	pthread_mutex_unlock(&p_queue->mutex);
 	

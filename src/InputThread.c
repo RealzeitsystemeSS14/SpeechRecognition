@@ -17,7 +17,7 @@ static int record(inputThread_t *p_thread)
 		return -1;
 	}
 	
-    printf("Listening for input...");
+    printf("Listening for input...\n");
 	//start recording from audiodevice
 	ret = ad_start_rec(p_thread->audioDevice);
     if (ret < 0) {
@@ -55,8 +55,6 @@ static int record(inputThread_t *p_thread)
 	
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
 	
-	printf("[Finished]\n");
-	
     return 0;
 }
 
@@ -70,6 +68,8 @@ static void* runThread(void * arg)
 			sphinxThread->exitCode = record(sphinxThread);
 			if(sphinxThread->exitCode != 0)
 				break;
+		} else {
+			usleep(1000);
 		}
 	}
 	printf("InputThread terminated.\n");
@@ -134,6 +134,7 @@ int startInputThread(inputThread_t *p_thread)
 	int ret;
 	
 	p_thread->running = 1;
+	p_thread->record = 0;
 	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create Thread (%d).\n", ret);

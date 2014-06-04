@@ -54,19 +54,23 @@ int main(int argc, char** argv)
     }
 	
 	printf("Init HypQueue...");
+	fflush(stdout);
 	if(initBlockingQueue(&hypQueue) != 0)
 		return -1;
 	printf(" [Done]\n");
 	printf("Init AudioQueue...");
+	fflush(stdout);
 	if(initBlockingQueue(&audioQueue) != 0)
 		return -2;
 	printf(" [Done]\n");
 	
 	printf("Init InputThread...");
+	fflush(stdout);
 	if(initInputThread(&inputThread, &audioQueue) != 0)
 		return -3;
 	printf(" [Done]\n");
 	printf("Init InterpreterThread...");
+	fflush(stdout);
 	if(initInterpreterThread(&interpreterThread, &audioQueue, &hypQueue, config) != 0)
 		return -4;
 	printf(" [Done]\n");
@@ -80,7 +84,7 @@ int main(int argc, char** argv)
 	
 	sleep(1);
 	while(run) {
-		printf("Press return to record data.\n");
+		printf("Press RETURN to record data.\n");
 		getchar();
 		startRecording(&inputThread);
 		
