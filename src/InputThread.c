@@ -13,8 +13,14 @@ static int record(inputThread_t *p_thread)
 	audioBuffer_t *resultBuf = malloc(sizeof(audioBuffer_t));
     
 	if(resultBuf == NULL) {
-		PRINT_ERR("Could not malloc resultBuf.\n");
+		PRINT_ERR("Failed to malloc resultBuf.\n");
 		return -1;
+	}
+	
+	ret = initAudioBuffer(resultBuf);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init resultBuf %d).\n", ret);
+		return ret;
 	}
 	
     printf("Listening for input...\n");
