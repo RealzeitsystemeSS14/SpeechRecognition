@@ -1,6 +1,7 @@
 #include <signal.h>
 #include "InputThread.h"
 #include "InterpreterThread.h"
+#include "ButtonThread.h"
 #include "Utils.h"
 
 struct sigaction sa;
@@ -9,6 +10,7 @@ volatile int run;
 
 inputThread_t inputThread;
 interpreterThread_t interpreterThread;
+buttonThread_t buttonThread;
 blockingQueue_t audioQueue;
 blockingQueue_t hypQueue;
 
@@ -74,6 +76,11 @@ int main(int argc, char** argv)
 	if(initInterpreterThread(&interpreterThread, &audioQueue, &hypQueue, config) != 0)
 		return -4;
 	printf(" [Done]\n");
+	printf("Init ButtonThread...");
+	fflush(stdout);
+	if(initButtonThread(&buttonThread, &inputThread) != 0)
+		return -4;
+	printf(" [Done]\n");
 	
 	printf("Start InputThread...\n");
 	if(startInputThread(&inputThread) != 0)
@@ -81,17 +88,12 @@ int main(int argc, char** argv)
 	printf("Start InterpreterThread...\n");
 	if(startInterpreterThread(&interpreterThread) != 0)
 		return -6;
+	printf("Start ButtonThread...\n");
+	if(startButtonThread(&buttonThread) != 0)
+		return -6;
 	
 	sleep(1);
 	while(run) {
-		printf("Press RETURN to record data.\n");
-		getchar();
-		startRecording(&inputThread);
-		
-		printf("Press RETURN to end recording.\n");
-		getchar();
-		stopRecording(&inputThread);
-		
 		printf("Waiting for hypothesis...\n");
 		hyp = (char*) dequeueBlockingQueue(&hypQueue);
 		printf("Received hypothesis: %s.\n", hyp);
@@ -100,7 +102,9 @@ int main(int argc, char** argv)
 	
 	joinInterpreterThread(&interpreterThread);
 	joinInputThread(&inputThread);
+	//joinButtonThread(&buttonThread);
 	
+	destroyButtonThread(&buttonThread);
 	destroyInterpreterThread(&interpreterThread);
 	destroyInputThread(&inputThread);
 	
