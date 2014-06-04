@@ -2,20 +2,22 @@
 #define INPUT_THREAD_H_
 
 #include <pthread.h>
+#include <sphinxbase/ad.h>
+#include <sphinxbase/cont_ad.h>
 #include "BlockingQueue.h"
-#include "SphinxInstance.h"
 
 typedef struct {
 	pthread_t thread;
 	blockingQueue_t *audioQueue;
-	sphinxInstance_t sphinx;
+	ad_rec_t *audioDevice;
+	cont_ad_t *contAudioDevice;
 	
 	int exitCode;
 	volatile int running;
 	volatile int record;
 } inputThread_t;
 
-int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue, cmd_ln_t *p_config);
+int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue);
 int destroyInputThread(inputThread_t *p_thread);
 
 int startInputThread(inputThread_t *p_thread);

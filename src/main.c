@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 	printf(" [Done]\n");
 	
 	printf("Init InputThread...");
-	if(initInputThread(&inputThread, &audioQueue, config) != 0)
+	if(initInputThread(&inputThread, &audioQueue) != 0)
 		return -3;
 	printf(" [Done]\n");
 	printf("Init InterpreterThread...");
@@ -78,7 +78,16 @@ int main(int argc, char** argv)
 	if(startInterpreterThread(&interpreterThread) != 0)
 		return -6;
 	
+	sleep(1);
 	while(run) {
+		printf("Press return to record data.\n");
+		getchar();
+		startRecording(&inputThread);
+		
+		printf("Press RETURN to end recording.\n");
+		getchar();
+		stopRecording(&inputThread);
+		
 		printf("Waiting for hypothesis...\n");
 		hyp = (char*) dequeueBlockingQueue(&hypQueue);
 		printf("Received hypothesis: %s.\n", hyp);

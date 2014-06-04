@@ -19,30 +19,22 @@ static int record(inputThread_t *p_thread)
 	
     printf("Listening for input...");
 	//start recording from audiodevice
-	ret = ad_start_rec(p_thread->sphinx.audioDevice);
+	ret = ad_start_rec(p_thread->audioDevice);
     if (ret < 0) {
 		PRINT_ERR("Could not start recording audio (%d).\n", ret);
         return ret;
 	}
     
 	//check if not silent
-	while ((ret = cont_ad_read(p_thread->sphinx.contAudioDevice, buf, BUFFER_SIZE)) == 0)
+	while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0)
         usleep(1000);
 	
 	//add read audio data to audioBuffer
 	addAudioBuffer(resultBuf, buf, ret);
-	
-	/*ret = ps_start_utt(p_thread->sphinx.psDecoder, NULL);
-    if (ret < 0)
-        return ret;
-	
-	ret = ps_process_raw(p_thread->sphinx.psDecoder, buf, BUFFER_SIZE, 0, 0);
-    if (ret < 0)
-        return ret;*/
     
     do
     {
-        ret = cont_ad_read(p_thread->sphinx.contAudioDevice, buf, BUFFER_SIZE);
+        ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
 
         if (ret < 0) {
 			//something went wrong
@@ -57,10 +49,9 @@ static int record(inputThread_t *p_thread)
         }
     } while(p_thread->record);
     
-    ad_stop_rec(p_thread->sphinx.audioDevice);
-    while (ad_read(p_thread->sphinx.audioDevice, buf, BUFFER_SIZE) >= 0);
-    cont_ad_reset(p_thread->sphinx.contAudioDevice);
-    /*ps_end_utt(p_thread->sphinx.psDecoder);*/
+    ad_stop_rec(p_thread->audioDevice);
+    while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0);
+    cont_ad_reset(p_thread->contAudioDevice);
 	
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
 	
@@ -85,7 +76,7 @@ static void* runThread(void * arg)
 	return &sphinxThread->exitCode;
 }
 
-int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue, cmd_ln_t *p_config)
+int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 {
 	int ret;
 	
@@ -94,11 +85,32 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue, cmd_
 	p_thread->record = 0;
 	p_thread->exitCode = 0;
 	
-	ret = initSphinxInstance(&p_thread->sphinx, p_config);
-	if(ret != 0) {
-		PRINT_ERR("Failed to init SphinxInstance (%d).\n", ret);
-		return ret;
+	//initialize audio device, used for recording audio data
+	p_thread->audioDevice = ad_open();
+    if (p_thread->audioDevice == NULL) {
+		PRINT_ERR("Failed to open audio device.");
+        return -1;
 	}
+
+    p_thread->contAudioDevice = cont_ad_init(p_thread->audioDevice, ad_read);
+    if (p_thread->contAudioDevice == NULL) {
+		PRINT_ERR("Failed to init continous audio device.");
+        return -2;
+	}
+
+	ret = ad_start_rec(p_thread->audioDevice);
+    if (ret < 0) {
+		PRINT_ERR("Failed to start recording (%d).", ret);
+        return ret;
+	}
+	
+	ret = cont_ad_calib(p_thread->contAudioDevice);
+    if (ret < 0) {
+		PRINT_ERR("Failed to calibrate continous audio device (%d).", ret);
+        return ret;
+	}
+
+    ad_stop_rec(p_thread->audioDevice);
 		
 	return 0;
 }
@@ -113,23 +125,13 @@ int destroyInputThread(inputThread_t *p_thread)
 		return ret;
 	}
 		
-	ret = closeSphinxInstance(&p_thread->sphinx);
-	if(ret != 0) {
-		PRINT_ERR("InputThread: could not close SphinxInstance (%d).\n", ret);
-		return ret;
-	}
-		
+	cont_ad_close(p_thread->contAudioDevice);
+    ad_close(p_thread->audioDevice);
 }
 
 int startInputThread(inputThread_t *p_thread)
 {
 	int ret;
-	
-	ret = initSphinxRecord(&p_thread->sphinx);
-	if(ret != 0) {
-		PRINT_ERR("Failed to InitRecording (%d).\n", ret);
-		return ret;
-	}
 	
 	p_thread->running = 1;
 	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
@@ -151,12 +153,6 @@ int stopInputThread(inputThread_t *p_thread)
 	}
 	
 	p_thread->running = 0;
-	
-	ret = closeSphinxRecord(&p_thread->sphinx);
-	if(ret != 0) {
-		PRINT_ERR("Failed to close SphinxRecord (%d).\n", ret);
-		return ret;
-	}
 		
 	return 0;
 }

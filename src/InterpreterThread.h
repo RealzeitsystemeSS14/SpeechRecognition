@@ -2,14 +2,14 @@
 #define INTERPRETER_THREAD_H_
 
 #include <pthread.h>
+#include <pocketsphinx.h>
 #include "BlockingQueue.h"
-#include "SphinxInstance.h"
 
 typedef struct {
 	pthread_t thread;
 	blockingQueue_t *audioQueue;
 	blockingQueue_t *hypQueue;
-	sphinxInstance_t sphinx;
+	ps_decoder_t *psDecoder;
 	
 	int exitCode;
 	volatile int running;

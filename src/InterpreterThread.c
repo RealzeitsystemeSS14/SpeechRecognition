@@ -12,10 +12,11 @@ int initInterpreterThread(interpreterThread_t *p_thread, blockingQueue_t *p_audi
 	p_thread->record = 0;
 	p_thread->exitCode = 0;
 	
-	ret = initSphinxInstance(&p_thread->sphinx, p_config);
-	if(ret != 0) {
-		PRINT_ERR("Failed to init SphinxInstance (%d).\n", ret);
-		return ret;
+	//init decoder, used to interprete audio data
+	p_thread->psDecoder = ps_init(p_config);
+    if (p_thread->psDecoder == NULL) {
+		PRINT_ERR("Failed to init Decoder (%d).\n", ret);
+        return -2;
 	}
 		
 	return 0;
@@ -30,12 +31,15 @@ int destroyInterpreterThread(interpreterThread_t *p_thread)
 		PRINT_ERR("Failed to cancel thread (%d).\n", ret);
 		return ret;
 	}
-		
-	ret = closeSphinxInstance(&p_thread->sphinx);
+	
+	//free decoder
+	ret = ps_free(p_thread->psDecoder);
 	if(ret != 0) {
-		PRINT_ERR("Failed to close SphinxInstance (%d).\n", ret);
+		PRINT_ERR("Failed to free decoder (%d).\n", ret);
 		return ret;
 	}
+	
+	return 0;
 }
 
 static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, char **p_outHyp)
@@ -44,21 +48,24 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 	char const *hyp, *uttid;
     int32 score;
 	
-	ret = ps_start_utt(p_thread->sphinx.psDecoder, NULL);
+	//start utterance, in which the data ist interpreted
+	ret = ps_start_utt(p_thread->psDecoder, NULL);
     if (ret < 0) {
 		PRINT_ERR("Failed to start utterance (%d).\n", ret);
 		return ret;
 	}
         
-	ret = ps_process_raw(p_thread->sphinx.psDecoder, buffer->buffer, buffer->size, 0, 0);
+	//interprete the audio data
+	ret = ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 0);
     if (ret < 0) {
 		PRINT_ERR("Failed to process audio data (%d).\n", ret);
         return ret;
 	}
 		
-	ps_end_utt(p_thread->sphinx.psDecoder);
+	ps_end_utt(p_thread->psDecoder);
 	
-	hyp = ps_get_hyp(p_thread->sphinx.psDecoder, &score, &uttid);
+	//get result of interpretation
+	hyp = ps_get_hyp(p_thread->psDecoder, &score, &uttid);
     if (hyp == NULL) {
         PRINT_ERR("Failed to get hypothesis.\n");
         return -1;
@@ -92,10 +99,6 @@ static void* runThread(void * arg)
 		free(buffer);
 	}
 	
-	ret = closeSphinxRecord(&interpreterThread->sphinx);
-	if(ret != 0)
-		PRINT_ERR("Failed to close SphinxRecord (%d).\n", ret);
-	
 	printf("InterpreterThread terminated.\n");
 	
 	return &interpreterThread->exitCode;
@@ -104,12 +107,6 @@ static void* runThread(void * arg)
 int startInterpreterThread(interpreterThread_t *p_thread)
 {
 	int ret;
-	
-	ret = initSphinxRecord(&p_thread->sphinx);
-	if(ret != 0) {
-		PRINT_ERR("Failed to init SphinxRecord (%d).\n", ret);
-		return ret;
-	}
 	
 	p_thread->keepRunning = 1;
 	p_thread->running = 1;
