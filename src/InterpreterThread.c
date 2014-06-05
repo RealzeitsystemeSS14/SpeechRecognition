@@ -82,28 +82,27 @@ static void* runThread(void * arg)
 	printf("InterpreterThread started.\n");
 	audioBuffer_t *buffer;
 	char *hyp;
-	int ret;
+	
 	
 	interpreterThread_t *interpreterThread = (interpreterThread_t*) arg;
 	interpreterThread->running = 1;
+	interpreterThread->exitCode = 0;
 	
 	while(interpreterThread->keepRunning) {
 		buffer = (audioBuffer_t*) dequeueBlockingQueue(interpreterThread->audioQueue);
 		if(buffer->size != 0) {
-			ret = interprete(interpreterThread, buffer, &hyp);
-			if(ret == 0)
+			interpreterThread->exitCode = interprete(interpreterThread, buffer, &hyp);
+			if(interpreterThread->exitCode == 0)
 				enqueueBlockingQueue(interpreterThread->hypQueue, (void*) hyp);
-			else {
+			else
 				interpreterThread->keepRunning = 0;
-				interpreterThread->exitCode = -1;
-			}
 		}
 		free(buffer);
 	}
 	interpreterThread->running = 0;
 	printf("InterpreterThread terminated.\n");
 	
-	return &interpreterThread->exitCode;
+	pthread_exit(&interpreterThread->exitCode);
 }
 
 int startInterpreterThread(interpreterThread_t *p_thread)
@@ -138,9 +137,7 @@ int stopInterpreterThread(interpreterThread_t *p_thread)
 
 int joinInterpreterThread(interpreterThread_t *p_thread)
 {
-	void *retVal;
-	int ret;
-	pthread_join(p_thread->thread, &retVal);
-		
-	return p_thread->exitCode;
+	void *ret;
+	pthread_join(p_thread->thread, &ret);
+	return *((int*) ret);
 }

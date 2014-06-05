@@ -1,18 +1,28 @@
 #include <stdlib.h>
 #include "BlockingQueue.h"
 
-int initBlockingQueue(blockingQueue_t *p_queue)
+#define IS_EMPTY(queue) (queue->size == 0)
+#define IS_FULL(queue) (queue->size == queue->maxSize)
+
+int initBlockingQueue(blockingQueue_t *p_queue, unsigned int p_size)
 {
 	int ret;
-	p_queue->first = NULL;
-	p_queue->last = NULL;
+	p_queue->maxSize = p_size;
+	p_queue->elements = malloc(sizeof(void*) * p_size);
+	if(p_queue->elements) 
+		return -1;
+		
 	p_queue->size = 0;
 	
-	ret =pthread_mutex_init(&p_queue->mutex, NULL);
+	ret = pthread_mutex_init(&p_queue->mutex, NULL);
 	if(ret != 0)
 		return ret;
 		
 	ret = pthread_cond_init(&p_queue->popCondition, NULL);
+	if(ret != 0)
+		return ret;
+	
+	ret = pthread_cond_init(&p_queue->pushCondition, NULL);
 	if(ret != 0)
 		return ret;
 	
@@ -22,7 +32,10 @@ int initBlockingQueue(blockingQueue_t *p_queue)
 int destroyBlockingQueue(blockingQueue_t *p_queue, int p_freeElements)
 {
 	int ret;
-	clearBlockingQueue(p_queue, p_freeElements);
+	ret = pthread_cond_destroy(&p_queue->pushCondition);
+	if(ret != 0)
+		return ret;
+	
 	ret = pthread_cond_destroy(&p_queue->popCondition);
 	if(ret != 0)
 		return ret;
@@ -31,6 +44,9 @@ int destroyBlockingQueue(blockingQueue_t *p_queue, int p_freeElements)
 	if(ret != 0)
 		return ret;
 		
+	clearBlockingQueue(p_queue, p_freeElements);
+	free(p_queue->elements);
+	
 	return 0;
 }
 
@@ -38,22 +54,13 @@ void enqueueBlockingQueue(blockingQueue_t *p_queue, void *p_element)
 {
 	pthread_mutex_lock(&p_queue->mutex);
 	
-	blockingQueueElement_t* element = malloc(sizeof(blockingQueueElement_t));
-	element->data = p_element;
-	if(p_queue->size == 0) {
-		element->prev = NULL;
-		element->next = NULL;
-		p_queue->first = element;
-		p_queue->last = element;
-	} else {
-		p_queue->last->next = element;
-		element->prev = p_queue->last;
-		element->next = NULL;
-		p_queue->last = element;
-	}
+	// block if queue is full
+	while(IS_FULL(p_queue))
+		pthread_cond_wait(&p_queue->pushCondition, &p_queue->mutex);
 	
+	p_queue->elements[p_queue->size] = p_element;
 	++p_queue->size;
-
+	
 	pthread_mutex_unlock(&p_queue->mutex);
 	pthread_cond_signal(&p_queue->popCondition);
 }
@@ -62,24 +69,17 @@ void* dequeueBlockingQueue(blockingQueue_t* p_queue)
 {
 	pthread_mutex_lock(&p_queue->mutex);
 	
-	//wait until queue has content
-	while(isEmptyBlockingQueue(p_queue))
+	// block if queue is empty
+	while(IS_EMPTY(p_queue))
 		pthread_cond_wait(&p_queue->popCondition, &p_queue->mutex);
 	
-	blockingQueueElement_t *resultElement = p_queue->first;
-	void *result = resultElement->data;
+	void *result = p_queue->elements[0];
 	--p_queue->size;
 	
-	//check if there are other elements in queue
-	if(p_queue->size == 0) {
-		p_queue->first = NULL;
-		p_queue->last = NULL;
-	} else {
-		p_queue->first = p_queue->first->next;
-		p_queue->first->prev = NULL;
-	}
+	int i;
+	for(i = 0; i < p_queue->size; ++i)
+		p_queue->elements[i] = p_queue->elements[i + 1];
 	
-	free(resultElement);
 	pthread_mutex_unlock(&p_queue->mutex);
 	
 	return result;
@@ -87,21 +87,15 @@ void* dequeueBlockingQueue(blockingQueue_t* p_queue)
 
 void clearBlockingQueue(blockingQueue_t* p_queue, int p_freeElements)
 {
-	blockingQueueElement_t* next, *current;
 	
 	pthread_mutex_lock(&p_queue->mutex);
 	
-	next = p_queue->first;
-	while(next != NULL) {
-		current = next;
-		next = current->next;
-		if(p_freeElements)
-			free(current->data);
-		free(current);
+	if(p_freeElements) {
+		int i;
+		for(i = 0; i < p_queue->size; ++i)
+			free(p_queue->elements[i]);
 	}
 	
-	p_queue->first = NULL;
-	p_queue->last = NULL;
 	p_queue->size = 0;
 	
 	pthread_mutex_unlock(&p_queue->mutex);
@@ -109,10 +103,9 @@ void clearBlockingQueue(blockingQueue_t* p_queue, int p_freeElements)
 
 unsigned int sizeBlockingQueue(blockingQueue_t* p_queue)
 {
-	return p_queue->size;
-}
-
-int isEmptyBlockingQueue(blockingQueue_t *p_queue)
-{
-	return p_queue->size == 0;
+	pthread_mutex_lock(&p_queue->mutex);
+	unsigned int result = p_queue->size;
+	pthread_mutex_unlock(&p_queue->mutex);
+	
+	return result;
 }

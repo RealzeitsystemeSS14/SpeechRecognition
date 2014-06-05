@@ -4,6 +4,9 @@
 #include "ButtonThread.h"
 #include "Utils.h"
 
+#define HYP_QUEUE_SIZE 10
+#define AUDIO_QUEUE_SIZE 10
+
 struct sigaction sa;
 
 volatile int run;
@@ -58,12 +61,12 @@ int main(int argc, char** argv)
 	
 	printf("Init HypQueue...");
 	fflush(stdout);
-	if(initBlockingQueue(&hypQueue) != 0)
+	if(initBlockingQueue(&hypQueue, HYP_QUEUE_SIZE) != 0)
 		return -1;
 	printf(" [Done]\n");
 	printf("Init AudioQueue...");
 	fflush(stdout);
-	if(initBlockingQueue(&audioQueue) != 0)
+	if(initBlockingQueue(&audioQueue, AUDIO_QUEUE_SIZE) != 0)
 		return -2;
 	printf(" [Done]\n");
 	

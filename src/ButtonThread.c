@@ -5,6 +5,7 @@ int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
 {
 	p_thread->inputThread = p_inputThread;
 	p_thread->running = 0;
+	p_thread->exitCode = 0;
 	
 	return 0;
 }
@@ -25,6 +26,7 @@ static void* runThread(void * arg)
 {
 	buttonThread_t *buttonThread = (buttonThread_t*) arg;
 	buttonThread->running = 1;
+	buttonThread->exitCode = 0;
 	
 	while(buttonThread->keepRunning) {
 		sleep(1);
@@ -40,7 +42,7 @@ static void* runThread(void * arg)
 	}
 	
 	buttonThread->running = 0;
-	return NULL;
+	pthread_exit(&buttonThread->exitCode);
 }
 
 int startButtonThread(buttonThread_t *p_thread)
@@ -84,5 +86,5 @@ int joinButtonThread(buttonThread_t *p_thread)
 {
 	void *ret;
 	pthread_join(p_thread->thread, &ret);
-	return 0;
+	return *((int*) ret);
 }

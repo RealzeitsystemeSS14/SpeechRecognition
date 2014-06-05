@@ -12,6 +12,7 @@ typedef struct {
 	pthread_t thread;
 	inputThread_t *inputThread;
 	
+	int exitCode;
 	volatile int running;
 	volatile int keepRunning;
 } buttonThread_t;
