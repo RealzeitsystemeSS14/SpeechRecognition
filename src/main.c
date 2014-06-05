@@ -45,7 +45,6 @@ int main(int argc, char** argv)
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
                          "-lm", "1048.lm",
                          "-dict", "1048.dic",
-						 "-logfn", "/dev/null",
                          //"-lm", MODELDIR "/lm/en/turtle.DMP",
                          //"-dict", MODELDIR "/lm/en/turtle.dic",
                          NULL);
@@ -54,6 +53,8 @@ int main(int argc, char** argv)
         PRINT_ERR("Error getting cmd config.\n");
         return -1;
     }
+	
+	err_set_logfp(fopen("/dev/null", "w"));
 	
 	printf("Init HypQueue...");
 	fflush(stdout);
@@ -92,7 +93,6 @@ int main(int argc, char** argv)
 	if(startButtonThread(&buttonThread) != 0)
 		return -6;
 	
-	sleep(1);
 	while(run) {
 		printf("Waiting for hypothesis...\n");
 		hyp = (char*) dequeueBlockingQueue(&hypQueue);

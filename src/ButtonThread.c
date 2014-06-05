@@ -29,6 +29,7 @@ static void* runThread(void * arg)
 {
 	buttonThread_t *buttonThread = (buttonThread_t*) arg;
 	while(1) {
+		sleep(1);
 		printf("Press RETURN to record data.\n");
 		getchar();
 		startRecording(buttonThread->inputThread);
