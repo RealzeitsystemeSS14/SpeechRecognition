@@ -59,6 +59,7 @@ static int record(inputThread_t *p_thread)
     while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
 	
+	printf("Stopped recording.");
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
 	
     return 0;
