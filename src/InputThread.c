@@ -3,7 +3,7 @@
 #include "InputThread.h"
 #include "Utils.h"
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1024
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 {
