@@ -9,7 +9,7 @@ int initBlockingQueue(blockingQueue_t *p_queue, unsigned int p_size)
 	int ret;
 	p_queue->maxSize = p_size;
 	p_queue->elements = malloc(sizeof(void*) * p_size);
-	if(p_queue->elements) 
+	if(p_queue->elements == NULL) 
 		return -1;
 		
 	p_queue->size = 0;
