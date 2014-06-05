@@ -5,6 +5,8 @@ int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
 {
 	p_thread->inputThread = p_inputThread;
 	p_thread->running = 0;
+	
+	return 0;
 }
 
 int destroyButtonThread(buttonThread_t *p_thread)
@@ -35,6 +37,8 @@ static void* runThread(void * arg)
 		getchar();
 		stopRecording(buttonThread->inputThread);
 	}
+	
+	return NULL;
 }
 
 int startButtonThread(buttonThread_t *p_thread)
