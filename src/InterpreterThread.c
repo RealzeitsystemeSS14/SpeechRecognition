@@ -80,10 +80,12 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 static void* runThread(void * arg)
 {
 	printf("InterpreterThread started.\n");
-	interpreterThread_t *interpreterThread = (interpreterThread_t*) arg;
 	audioBuffer_t *buffer;
 	char *hyp;
 	int ret;
+	
+	interpreterThread_t *interpreterThread = (interpreterThread_t*) arg;
+	interpreterThread->running = 1;
 	
 	while(interpreterThread->keepRunning) {
 		buffer = (audioBuffer_t*) dequeueBlockingQueue(interpreterThread->audioQueue);
@@ -98,7 +100,7 @@ static void* runThread(void * arg)
 		}
 		free(buffer);
 	}
-	
+	interpreterThread->running = 0;
 	printf("InterpreterThread terminated.\n");
 	
 	return &interpreterThread->exitCode;
@@ -109,7 +111,6 @@ int startInterpreterThread(interpreterThread_t *p_thread)
 	int ret;
 	
 	p_thread->keepRunning = 1;
-	p_thread->running = 1;
 	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create thread (%d).\n", ret);
@@ -123,11 +124,11 @@ int stopInterpreterThread(interpreterThread_t *p_thread)
 {
 	int ret;
 	p_thread->keepRunning = 0;
-	p_thread->running = 0;
 	audioBuffer_t *poisonPill = malloc(sizeof(audioBuffer_t));
 	ret = initAudioBuffer(poisonPill);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init poison pill (%d).\n", ret);
+		free(poisonPill);
 		return ret;
 	}
 	enqueueBlockingQueue(p_thread->audioQueue, poisonPill);

@@ -1,3 +1,8 @@
+/* The InputThread records incoming audio data. Recording can be controlled
+ * with startRecording() and stopRecording().
+ * The received data (after stopRecording()), is queued in the given BlockingQueue.
+ * All functions return 0 on success. */
+ 
 #ifndef INPUT_THREAD_H_
 #define INPUT_THREAD_H_
 

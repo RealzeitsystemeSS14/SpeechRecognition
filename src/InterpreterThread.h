@@ -1,3 +1,8 @@
+/* The InterpreterThread takes audio data from the given audioQueue
+ * and interpretes it. A String hypothesis is created and queued in the given
+ * hypQueue.
+ * All functions return 0 on success.*/
+
 #ifndef INTERPRETER_THREAD_H_
 #define INTERPRETER_THREAD_H_
 

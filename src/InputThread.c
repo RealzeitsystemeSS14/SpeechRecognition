@@ -8,7 +8,7 @@
 static void signalStartRecording(inputThread_t *p_thread)
 {
 	pthread_mutex_lock(&p_thread->startRecordMutex);
-	printf("Listening for input...\n");
+	printf("Recording input...\n");
 	pthread_cond_signal(&p_thread->startRecordCond);
 	pthread_mutex_unlock(&p_thread->startRecordMutex);
 }
@@ -16,7 +16,7 @@ static void signalStartRecording(inputThread_t *p_thread)
 static void signalStopRecording(inputThread_t *p_thread)
 {
 	pthread_mutex_lock(&p_thread->stopRecordMutex);
-	printf("Stopped listening.\n");
+	printf("Stopped recording.\n");
 	pthread_cond_signal(&p_thread->stopRecordCond);
 	pthread_mutex_unlock(&p_thread->stopRecordMutex);
 }
@@ -208,6 +208,7 @@ int stopRecording(inputThread_t *p_thread)
 	
 	pthread_mutex_lock(&p_thread->stopRecordMutex);
 	p_thread->record = 0;
+	// wait for recording to be stopped, else start could be called too fast
 	pthread_cond_wait(&p_thread->stopRecordCond, &p_thread->stopRecordMutex);
 	pthread_mutex_unlock(&p_thread->stopRecordMutex);
 	

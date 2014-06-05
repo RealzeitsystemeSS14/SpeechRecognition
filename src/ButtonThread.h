@@ -1,6 +1,6 @@
 /* ButtonThread reacts to button presses, and starts /stops the 
  * recording according to the situation of the InputThread.
- * All functions return zero on success. */
+ * All functions return 0 on success. */
 
 #ifndef BUTTON_THREAD_H_
 #define BUTTON_THREAD_H_
