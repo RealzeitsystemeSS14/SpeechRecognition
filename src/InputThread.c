@@ -42,27 +42,27 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	// open audio device, used for recording audio data
 	p_thread->audioDevice = ad_open();
     if (p_thread->audioDevice == NULL) {
-		PRINT_ERR("Failed to open audio device.");
+		PRINT_ERR("Failed to open audio device.\n");
         return -1;
 	}
 	
 	// init audio device as continous audio device
     p_thread->contAudioDevice = cont_ad_init(p_thread->audioDevice, ad_read);
     if (p_thread->contAudioDevice == NULL) {
-		PRINT_ERR("Failed to init continous audio device.");
+		PRINT_ERR("Failed to init continous audio device.\n");
         return -2;
 	}
 	
 	// calibrate audio device
 	ret = ad_start_rec(p_thread->audioDevice);
     if (ret < 0) {
-		PRINT_ERR("Failed to start recording (%d).", ret);
+		PRINT_ERR("Failed to start recording (%d).\n", ret);
         return ret;
 	}
 	
 	ret = cont_ad_calib(p_thread->contAudioDevice);
     if (ret < 0) {
-		PRINT_ERR("Failed to calibrate continous audio device (%d).", ret);
+		PRINT_ERR("Failed to calibrate continous audio device (%d).\n", ret);
         return ret;
 	}
 
@@ -86,25 +86,25 @@ int destroyInputThread(inputThread_t *p_thread)
 	
 	ret = pthread_cond_destroy(&p_thread->stopRecordCond);
 	if(ret != 0) {
-		PRINT_ERR("Failed to destroy condition variable (%d).", ret);
+		PRINT_ERR("Failed to destroy condition variable (%d).\n", ret);
 		return ret;
 	}
 	
 	ret = pthread_mutex_destroy(&p_thread->stopRecordMutex);
 	if(ret != 0) {
-		PRINT_ERR("Failed to destroy mutex (%d).", ret);
+		PRINT_ERR("Failed to destroy mutex (%d).\n", ret);
 		return ret;
 	}
 	
 	ret = pthread_cond_destroy(&p_thread->startRecordCond);
 	if(ret != 0) {
-		PRINT_ERR("Failed to destroy condition variable (%d).", ret);
+		PRINT_ERR("Failed to destroy condition variable (%d).\n", ret);
 		return ret;
 	}
 	
 	ret = pthread_mutex_destroy(&p_thread->startRecordMutex);
 	if(ret != 0) {
-		PRINT_ERR("Failed to destroy mutex (%d).", ret);
+		PRINT_ERR("Failed to destroy mutex (%d).\n", ret);
 		return ret;
 	}
 	
@@ -153,13 +153,6 @@ static int record(inputThread_t *p_thread)
 	}
     
 	signalStartRecording(p_thread);
-	//check if not silent
-	while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0 && p_thread->record)
-        usleep(1000);
-	
-	//add read audio data to audioBuffer
-	addAudioBuffer(resultBuf, buf, ret);
-    
     while(p_thread->record) {
         ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
 
@@ -240,7 +233,7 @@ int joinInputThread(inputThread_t *p_thread)
 int startRecording(inputThread_t *p_thread)
 {
 	if(p_thread->record) {
-		
+		PRINT_ERR("Cannot start recording, already recording.\n");
 		return -1;
 	}
 	
@@ -256,6 +249,7 @@ int startRecording(inputThread_t *p_thread)
 int stopRecording(inputThread_t *p_thread)
 {
 	if(!p_thread->record) {
+		PRINT_ERR("Cannot stop recording, not recording.\n");
 		return -1;
 	}
 	
