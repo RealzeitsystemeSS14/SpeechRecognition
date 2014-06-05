@@ -12,8 +12,14 @@ typedef struct {
 	ad_rec_t *audioDevice;
 	cont_ad_t *contAudioDevice;
 	
+	pthread_cond_t startRecordCond;
+	pthread_mutex_t startRecordMutex;
+	pthread_cond_t stopRecordCond;
+	pthread_mutex_t stopRecordMutex;
+	
 	int exitCode;
 	volatile int running;
+	volatile int keepRunning;
 	volatile int record;
 } inputThread_t;
 
@@ -24,7 +30,7 @@ int startInputThread(inputThread_t *p_thread);
 int stopInputThread(inputThread_t *p_thread);
 int joinInputThread(inputThread_t *p_thread);
 
-void startRecording(inputThread_t *p_thread);
-void stopRecording(inputThread_t *p_thread);
+int startRecording(inputThread_t *p_thread);
+int stopRecording(inputThread_t *p_thread);
 
 #endif

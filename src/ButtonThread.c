@@ -12,15 +12,11 @@ int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
 int destroyButtonThread(buttonThread_t *p_thread)
 {
 	int ret;
-	if(p_thread->running) {
-		ret = pthread_cancel(p_thread->thread);
-		if(ret != 0) {
-			PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-			return ret;
-		}
+	ret = stopButtonThread(p_thread, 1);
+	if(ret != 0) {
+		PRINT_ERR("Failed to cancel thread (%d).\n", ret);
+		return ret;
 	}
-	
-	p_thread->running = 0;
 	
 	return 0;
 }
@@ -28,10 +24,14 @@ int destroyButtonThread(buttonThread_t *p_thread)
 static void* runThread(void * arg)
 {
 	buttonThread_t *buttonThread = (buttonThread_t*) arg;
-	while(1) {
+	buttonThread->running = 1;
+	
+	while(buttonThread->keepRunning) {
 		sleep(1);
 		printf("Press RETURN to record data.\n");
 		getchar();
+		if(!buttonThread->keepRunning)
+			break;
 		startRecording(buttonThread->inputThread);
 		
 		printf("Press RETURN to end recording.\n");
@@ -39,6 +39,7 @@ static void* runThread(void * arg)
 		stopRecording(buttonThread->inputThread);
 	}
 	
+	buttonThread->running = 0;
 	return NULL;
 }
 
@@ -46,7 +47,12 @@ int startButtonThread(buttonThread_t *p_thread)
 {
 	int ret;
 	
-	p_thread->running = 1;
+	if(p_thread->running) {
+		PRINT_ERR("Thread is already running.\n");
+		return -1;
+	}
+	
+	p_thread->keepRunning = 1;
 	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create thread (%d).\n", ret);
@@ -56,16 +62,27 @@ int startButtonThread(buttonThread_t *p_thread)
 	return 0;
 }
 
-int stopButtonThread(buttonThread_t *p_thread)
+int stopButtonThread(buttonThread_t *p_thread, int p_force)
 {
 	int ret;
-	ret = pthread_cancel(p_thread->thread);
-	if(ret != 0) {
-		PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-		return ret;
+	if(p_force) {
+		ret = pthread_cancel(p_thread->thread);
+		p_thread->keepRunning = 0;
+		if(ret != 0) {
+			PRINT_ERR("Failed to cancel thread (%d).\n", ret);
+			return ret;
+		}
+		p_thread->running = 0;
+	} else {
+		p_thread->keepRunning = 0;
 	}
 	
-	p_thread->running = 0;
-	
+	return 0;
+}
+
+int joinButtonThread(buttonThread_t *p_thread)
+{
+	void *ret;
+	pthread_join(p_thread->thread, &ret);
 	return 0;
 }

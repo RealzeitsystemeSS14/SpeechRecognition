@@ -5,13 +5,29 @@
 
 #define BUFFER_SIZE 4096
 
+static void signalStartRecording(inputThread_t *p_thread)
+{
+	pthread_mutex_lock(&p_thread->startRecordMutex);
+	printf("Listening for input...\n");
+	pthread_cond_signal(&p_thread->startRecordCond);
+	pthread_mutex_unlock(&p_thread->startRecordMutex);
+}
+
+static void signalStopRecording(inputThread_t *p_thread)
+{
+	pthread_mutex_lock(&p_thread->stopRecordMutex);
+	printf("Stopped listening.\n");
+	pthread_cond_signal(&p_thread->stopRecordCond);
+	pthread_mutex_unlock(&p_thread->stopRecordMutex);
+}
+
 static int record(inputThread_t *p_thread)
 {
     int ret;
     int16 buf[BUFFER_SIZE];
+	
 	//create audioBuffer for audioQueue
 	audioBuffer_t *resultBuf = malloc(sizeof(audioBuffer_t));
-    
 	if(resultBuf == NULL) {
 		PRINT_ERR("Failed to malloc resultBuf.\n");
 		return -1;
@@ -22,8 +38,7 @@ static int record(inputThread_t *p_thread)
 		PRINT_ERR("Failed to init resultBuf %d).\n", ret);
 		return ret;
 	}
-	
-    printf("Listening for input...\n");
+    
 	//start recording from audiodevice
 	ret = ad_start_rec(p_thread->audioDevice);
     if (ret < 0) {
@@ -31,15 +46,15 @@ static int record(inputThread_t *p_thread)
         return ret;
 	}
     
+	signalStartRecording(p_thread);
 	//check if not silent
-	while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0)
+	while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0 && p_thread->record)
         usleep(1000);
 	
 	//add read audio data to audioBuffer
 	addAudioBuffer(resultBuf, buf, ret);
     
-    do
-    {
+    while(p_thread->record) {
         ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
 
         if (ret < 0) {
@@ -47,19 +62,19 @@ static int record(inputThread_t *p_thread)
             PRINT_ERR("Failed to record audio (%d).\n", ret);
             return ret;
         } else if(ret > 0) {
-            // Valid speech data read
+            // valid speech data read
             addAudioBuffer(resultBuf, buf, ret);
         } else {
             //no data
             usleep(1000);
         }
-    } while(p_thread->record);
+    }
     
     ad_stop_rec(p_thread->audioDevice);
     while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
 	
-	printf("Stopped recording.");
+	signalStopRecording(p_thread);
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
 	
     return 0;
@@ -69,8 +84,9 @@ static void* runThread(void * arg)
 {
 	printf("InputThread started.\n");
 	inputThread_t *sphinxThread = (inputThread_t*) arg;
+	sphinxThread->running = 1;
 	
-	while(1) {
+	while(sphinxThread->keepRunning) {
 		if(sphinxThread->record) {
 			sphinxThread->exitCode = record(sphinxThread);
 			if(sphinxThread->exitCode != 0)
@@ -79,6 +95,8 @@ static void* runThread(void * arg)
 			usleep(1000);
 		}
 	}
+	
+	sphinxThread->running = 0;
 	printf("InputThread terminated.\n");
 	return &sphinxThread->exitCode;
 }
@@ -89,6 +107,7 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	
 	p_thread->audioQueue = p_audioQueue;
 	p_thread->running = 0;
+	p_thread->keepRunning = 0;
 	p_thread->record = 0;
 	p_thread->exitCode = 0;
 	
@@ -140,8 +159,8 @@ int startInputThread(inputThread_t *p_thread)
 {
 	int ret;
 	
-	p_thread->running = 1;
 	p_thread->record = 0;
+	p_thread->keepRunning = 1;
 	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create Thread (%d).\n", ret);
@@ -154,14 +173,7 @@ int startInputThread(inputThread_t *p_thread)
 int stopInputThread(inputThread_t *p_thread)
 {
 	int ret;
-	ret = pthread_cancel(p_thread->thread);
-	if(ret != 0) {
-		PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-		return ret;
-	}
-	
-	p_thread->running = 0;
-		
+	p_thread->keepRunning = 0;
 	return 0;
 }
 
@@ -172,12 +184,32 @@ int joinInputThread(inputThread_t *p_thread)
 	return p_thread->exitCode;
 }
 
-void startRecording(inputThread_t *p_thread)
+int startRecording(inputThread_t *p_thread)
 {
+	if(p_thread->record) {
+		
+		return -1;
+	}
+	
+	pthread_mutex_lock(&p_thread->startRecordMutex);
 	p_thread->record = 1;
+	// wait for recording to be started, else stop could be called too fast
+	pthread_cond_wait(&p_thread->startRecordCond, &p_thread->startRecordMutex);
+	pthread_mutex_unlock(&p_thread->startRecordMutex);
+	
+	return 0;
 }
 
-void stopRecording(inputThread_t *p_thread)
+int stopRecording(inputThread_t *p_thread)
 {
+	if(!p_thread->record) {
+		return -1;
+	}
+	
+	pthread_mutex_lock(&p_thread->stopRecordMutex);
 	p_thread->record = 0;
+	pthread_cond_wait(&p_thread->stopRecordCond, &p_thread->stopRecordMutex);
+	pthread_mutex_unlock(&p_thread->stopRecordMutex);
+	
+	return 0;
 }
