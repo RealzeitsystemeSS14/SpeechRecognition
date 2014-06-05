@@ -151,8 +151,18 @@ static int record(inputThread_t *p_thread)
 		PRINT_ERR("Could not start recording audio (%d).\n", ret);
         return ret;
 	}
-    
+
 	signalStartRecording(p_thread);
+	
+		//check if not silent
+	while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0)
+        usleep(1000);
+
+	//add read audio data to audioBuffer
+	addAudioBuffer(resultBuf, buf, ret);
+	
+	printf("Received audio.\n");
+	
     while(p_thread->record) {
         ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
 
