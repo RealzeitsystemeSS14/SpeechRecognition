@@ -33,6 +33,8 @@ int brakeCar(crashSimulation_t *p_simulation);
 int stepSimulation(crashSimulation_t *p_simulation);
 int resetSimulation(crashSimulation_t *p_simulation);
 int setSimulationParamter(crashSimulation_t *p_simulation, unsigned int p_velocity, unsigned int p_acceleration, unsigned int p_brakeAcceleration, unsigned int p_distance);
+unsigned int getCarPosition(crashSimulation_t *p_simulation);
+unsigned int getSimulationDistance(crashSimulation_t *p_simulation);
 
 typedef struct {
 	pthread_t thread;

@@ -27,13 +27,17 @@ int sleepRate(rate_t* p_rate)
 	diff.tv_sec = diff.tv_sec - p_rate->lastTimeStamp.tv_sec;
 	diff.tv_usec = diff.tv_usec - p_rate->lastTimeStamp.tv_usec;
 	diffUsec = ((useconds_t) diff.tv_sec) * USEC_PER_SEC + diff.tv_usec;
-	intervalUsec = USEC_PER_SEC / ((useconds_t) p_rate->targetRate);
+	intervalUsec = USEC_PER_SEC / p_rate->targetRate;
 	
 	if(diffUsec < intervalUsec) {
 		ret = usleep(intervalUsec - diffUsec);
 		if(ret != 0)
 			return ret;
 	}
+	
+	ret = gettimeofday(&p_rate->lastTimeStamp, NULL);
+	if(ret != 0)
+		return ret;
 	
 	return 0;
 }

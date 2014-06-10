@@ -24,6 +24,7 @@ int destroyButtonThread(buttonThread_t *p_thread)
 
 static void* runThread(void * arg)
 {
+	PRINT_INFO("ButtonThread started.\n");
 	buttonThread_t *buttonThread = (buttonThread_t*) arg;
 	buttonThread->running = 1;
 	buttonThread->exitCode = 0;
@@ -42,6 +43,7 @@ static void* runThread(void * arg)
 	}
 	
 	buttonThread->running = 0;
+	PRINT_INFO("ButtonThread terminated.\n");
 	pthread_exit(&buttonThread->exitCode);
 }
 

@@ -99,6 +99,14 @@ make
 sudo make install
 ```
 
+### allegro
+
+* allegro wird zur grafischen Darstellung der Simulation genutzt
+
+```
+sudo apt-get install liballegro4.2-dev
+```
+
 ## Probleme
 
 ### ALSA
