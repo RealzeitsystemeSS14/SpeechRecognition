@@ -1,5 +1,5 @@
-/* ButtonThread reacts to button presses, and starts /stops the 
- * recording according to the situation of the InputThread.
+/* ButtonThread reacts to button presses, and starts / stops the 
+ * recording of audio data according to the situation of the InputThread.
  * All functions return 0 on success. */
 
 #ifndef BUTTON_THREAD_H_

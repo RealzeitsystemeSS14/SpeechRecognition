@@ -114,7 +114,7 @@ int destroyInputThread(inputThread_t *p_thread)
 static void signalStartRecording(inputThread_t *p_thread)
 {
 	pthread_mutex_lock(&p_thread->startRecordMutex);
-	printf("Recording input...\n");
+	PRINT_INFO("Recording input...\n");
 	pthread_cond_signal(&p_thread->startRecordCond);
 	pthread_mutex_unlock(&p_thread->startRecordMutex);
 }
@@ -122,7 +122,7 @@ static void signalStartRecording(inputThread_t *p_thread)
 static void signalStopRecording(inputThread_t *p_thread)
 {
 	pthread_mutex_lock(&p_thread->stopRecordMutex);
-	printf("Stopped recording.\n");
+	PRINT_INFO("Stopped recording.\n");
 	pthread_cond_signal(&p_thread->stopRecordCond);
 	pthread_mutex_unlock(&p_thread->stopRecordMutex);
 }
@@ -161,7 +161,7 @@ static int record(inputThread_t *p_thread)
 	//add read audio data to audioBuffer
 	addAudioBuffer(resultBuf, buf, ret);
 	
-	printf("Received audio.\n");
+	PRINT_INFO("Received audio.\n");
 	
     while(p_thread->record) {
         ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
@@ -191,7 +191,7 @@ static int record(inputThread_t *p_thread)
 
 static void* runThread(void * arg)
 {
-	printf("InputThread started.\n");
+	PRINT_INFO("InputThread started.\n");
 	inputThread_t *sphinxThread = (inputThread_t*) arg;
 	sphinxThread->exitCode = 0;
 	sphinxThread->running = 1;
@@ -207,7 +207,7 @@ static void* runThread(void * arg)
 	}
 	
 	sphinxThread->running = 0;
-	printf("InputThread terminated.\n");
+	PRINT_INFO("InputThread terminated.\n");
 	pthread_exit(&sphinxThread->exitCode);
 }
 

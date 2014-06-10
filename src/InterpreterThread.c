@@ -79,7 +79,7 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 
 static void* runThread(void * arg)
 {
-	printf("InterpreterThread started.\n");
+	PRINT_INFO("InterpreterThread started.\n");
 	audioBuffer_t *buffer;
 	char *hyp;
 	
@@ -100,7 +100,7 @@ static void* runThread(void * arg)
 		free(buffer);
 	}
 	interpreterThread->running = 0;
-	printf("InterpreterThread terminated.\n");
+	PRINT_INFO("InterpreterThread terminated.\n");
 	
 	pthread_exit(&interpreterThread->exitCode);
 }

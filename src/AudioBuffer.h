@@ -1,3 +1,9 @@
+/* The AudioBuffer is used to save audio data, to be enqeued in a BlockingQueue.
+ * It transports the audio data between threads.
+ * initAudioBuffer() return 0 on success.
+ * addAudioBuffer() returns 0 on success, else the remaining bytes, which have not been written
+ * into the AudioBuffer.*/
+
 #ifndef AUDIO_BUFFER_H_
 #define AUDIO_BUFFER_H_
 

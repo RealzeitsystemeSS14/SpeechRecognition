@@ -2,6 +2,8 @@
 #include "InputThread.h"
 #include "InterpreterThread.h"
 #include "ButtonThread.h"
+#include "CrashSimulationThread.h"
+#include "HypothesisMapper.h"
 #include "Utils.h"
 
 #define HYP_QUEUE_SIZE 10
@@ -9,20 +11,18 @@
 
 struct sigaction sa;
 
-volatile int run;
+blockingQueue_t audioQueue;
+blockingQueue_t hypQueue;
 
 inputThread_t inputThread;
 interpreterThread_t interpreterThread;
 buttonThread_t buttonThread;
-blockingQueue_t audioQueue;
-blockingQueue_t hypQueue;
+crashSimulationThread_t simulationThread;
+hypothesisMapper_t hypMapper;
 
 void sighandler(int sig)
 {
-    run = 0;
-	char *poisonPill = malloc(sizeof(char) * 11);
-	strcpy(poisonPill, "poisonPill");
-	enqueueBlockingQueue(&hypQueue, poisonPill);
+	//TODO
 	stopInputThread(&inputThread);
 	stopInterpreterThread(&interpreterThread);
 }
@@ -36,13 +36,12 @@ void setSignalAction()
     sigaction(SIGTERM, &sa, NULL);
 }
 
-int main(int argc, char** argv)
+static int init()
 {
-	run = 1;
-	char *hyp;
 	cmd_ln_t *config;
 	
-	printf("Getting Config...\n");
+	err_set_logfp(fopen("/dev/null", "w"));
+	PRINT_INFO("Getting Config...\n");
 
     config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
@@ -57,62 +56,105 @@ int main(int argc, char** argv)
         return -1;
     }
 	
-	err_set_logfp(fopen("/dev/null", "w"));
-	
-	printf("Init HypQueue...");
+	PRINT_INFO("Init HypQueue...");
 	fflush(stdout);
 	if(initBlockingQueue(&hypQueue, HYP_QUEUE_SIZE) != 0)
 		return -1;
-	printf(" [Done]\n");
-	printf("Init AudioQueue...");
+	PRINT_INFO(" [Done]\n");
+	
+	PRINT_INFO("Init AudioQueue...");
 	fflush(stdout);
 	if(initBlockingQueue(&audioQueue, AUDIO_QUEUE_SIZE) != 0)
 		return -2;
-	printf(" [Done]\n");
+	PRINT_INFO(" [Done]\n");
 	
-	printf("Init InputThread...");
+	PRINT_INFO("Init InputThread...");
 	fflush(stdout);
 	if(initInputThread(&inputThread, &audioQueue) != 0)
 		return -3;
-	printf(" [Done]\n");
-	printf("Init InterpreterThread...");
+	PRINT_INFO(" [Done]\n");
+	
+	PRINT_INFO("Init InterpreterThread...");
 	fflush(stdout);
 	if(initInterpreterThread(&interpreterThread, &audioQueue, &hypQueue, config) != 0)
 		return -4;
-	printf(" [Done]\n");
-	printf("Init ButtonThread...");
+	PRINT_INFO(" [Done]\n");
+	
+	PRINT_INFO("Init ButtonThread...");
 	fflush(stdout);
 	if(initButtonThread(&buttonThread, &inputThread) != 0)
 		return -4;
-	printf(" [Done]\n");
+	PRINT_INFO(" [Done]\n");
 	
-	printf("Start InputThread...\n");
-	if(startInputThread(&inputThread) != 0)
+	PRINT_INFO("Init SimulationThread...");
+	fflush(stdout);
+	if(initCrashSimulationThread(&simulationThread) != 0)
 		return -5;
-	printf("Start InterpreterThread...\n");
+	PRINT_INFO(" [Done]\n");
+	
+	PRINT_INFO("Init HypothesisMapper...");
+	fflush(stdout);
+	if(initHypothesisMapper(&hypMapper, &hypQueue, &simulationThread) != 0)
+		return -6;
+	PRINT_INFO(" [Done]\n");
+	
+	return 0;
+}
+
+static int start()
+{
+	PRINT_INFO("Start InputThread...\n");
+	if(startInputThread(&inputThread) != 0)
+		return -20;
+	PRINT_INFO("Start InterpreterThread...\n");
 	if(startInterpreterThread(&interpreterThread) != 0)
-		return -6;
-	printf("Start ButtonThread...\n");
+		return -21;
+	PRINT_INFO("Start ButtonThread...\n");
 	if(startButtonThread(&buttonThread) != 0)
-		return -6;
-	
-	while(run) {
-		printf("Waiting for hypothesis...\n");
-		hyp = (char*) dequeueBlockingQueue(&hypQueue);
-		printf("Received hypothesis: %s.\n", hyp);
-		free(hyp);
-	}
-	
+		return -22;
+	PRINT_INFO("Start SimulationThread...\n");
+	if(startCrashSimulationThread(&simulationThread) != 0)
+		return -23;
+		
+	return 0;
+}
+
+static void join()
+{
+	joinCrashSimulationThread(&simulationThread);
+	joinButtonThread(&buttonThread);
 	joinInterpreterThread(&interpreterThread);
 	joinInputThread(&inputThread);
-	//joinButtonThread(&buttonThread);
-	
+}
+
+static void destroy()
+{
+	destroyCrashSimulationThread(&simulationThread);
 	destroyButtonThread(&buttonThread);
 	destroyInterpreterThread(&interpreterThread);
 	destroyInputThread(&inputThread);
 	
 	destroyBlockingQueue(&audioQueue, 1);
 	destroyBlockingQueue(&hypQueue, 1);
+}
+
+int main(int argc, char** argv)
+{
+	int ret;
+	
+	ret = init();
+	if(ret != 0)
+		return ret;
+	
+	ret = start();
+	if(ret != 0)
+		return ret;
+	
+	
+	loopHypothesisMapper(&hypMapper);
+	
+	join();
+	destroy();
 	
 	return 0;
 }

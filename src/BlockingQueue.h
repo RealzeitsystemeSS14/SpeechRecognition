@@ -1,5 +1,6 @@
-/* This BlockingQueue blocks on enqueueing and dequeueing. If the queue is full
- * enqueueBlockingQueue() blocks. If the queue is empty dequeueBlockingQueue() blocks.
+/* This BlockingQueue blocks on enqueueing and dequeueing. 
+ * enqueueBlockingQueue() blocks if the queue is full.
+ * dequeueBlockingQueue() blocks if the queue is empty .
  * All functions (return type int) return 0 on success. */
  
 #ifndef BLOCKING_QUEUE_H_

@@ -30,13 +30,13 @@ static void* runThread(void * arg)
 	
 	while(buttonThread->keepRunning) {
 		sleep(1);
-		printf("Press RETURN to record data.\n");
+		PRINT_INFO("Press RETURN to record data.\n");
 		getchar();
 		if(!buttonThread->keepRunning)
 			break;
 		startRecording(buttonThread->inputThread);
 		
-		printf("Press RETURN to end recording.\n");
+		PRINT_INFO("Press RETURN to end recording.\n");
 		getchar();
 		stopRecording(buttonThread->inputThread);
 	}
