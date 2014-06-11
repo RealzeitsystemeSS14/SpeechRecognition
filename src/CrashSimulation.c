@@ -23,6 +23,8 @@ int stepSimulation(crashSimulation_t *p_simulation)
 	
 	// check if car already crashed into the wall
 	if(CAR_CRASHED(p_simulation)) {
+		ret = -1;
+	} else {
 		if(CAR_BRAKES(p_simulation)) {
 			if(CAR_STOPPED(p_simulation))
 				ret = 1;
@@ -32,7 +34,7 @@ int stepSimulation(crashSimulation_t *p_simulation)
 				p_simulation->car.position += p_simulation->car.velocity;
 				
 				toDec = MIN(p_simulation->car.brakeAcceleration, p_simulation->car.velocity);
-				p_simulation->car.velocity -= p_simulation->car.brakeAcceleration;
+				p_simulation->car.velocity -= toDec;
 			}
 		} else {
 			// only if car has not crashed and does not brake
@@ -41,8 +43,7 @@ int stepSimulation(crashSimulation_t *p_simulation)
 			p_simulation->car.velocity += p_simulation->car.acceleration;
 			ret = 0;
 		}
-	} else
-		ret = -1;
+	}
 	
 	return ret;
 }

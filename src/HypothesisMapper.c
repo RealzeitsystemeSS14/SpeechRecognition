@@ -27,7 +27,8 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		hyp = dequeueBlockingQueue(p_mapper->hypQueue);
 		//change hypothesis to lower case, to make compare case insensitive
 		toLowerCase(hyp);
-		// check which command was calles
+		// check which command was called
+		PRINT_INFO("Hypothesis received: %s.\n", hyp);
 		if(strcmp(hyp, START_CMD) == 0)
 			startSimulation(p_mapper->simulationThread);
 		else if(strcmp(hyp, STOP_CMD) == 0)
