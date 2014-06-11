@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "HypothesisMapper.h"
+#include "Utils.h"
 
 #define STOP_CMD "stop"
 #define START_CMD "start"
@@ -35,7 +36,10 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 			stopSimultaion(p_mapper->simulationThread);
 			//then reset simulation itself
 			resetSimulation(&p_mapper->simulationThread->simulation);
-		}
+		} else
+			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
+		
+		free(hyp);
 	}
 }
 

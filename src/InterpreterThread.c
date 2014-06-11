@@ -59,6 +59,7 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 	ret = ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 0);
     if (ret < 0) {
 		PRINT_ERR("Failed to process audio data (%d).\n", ret);
+		ps_end_utt(p_thread->psDecoder);
         return ret;
 	}
 		
@@ -94,8 +95,6 @@ static void* runThread(void * arg)
 			interpreterThread->exitCode = interprete(interpreterThread, buffer, &hyp);
 			if(interpreterThread->exitCode == 0)
 				enqueueBlockingQueue(interpreterThread->hypQueue, (void*) hyp);
-			else
-				interpreterThread->keepRunning = 0;
 		}
 		free(buffer);
 	}

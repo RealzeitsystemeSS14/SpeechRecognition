@@ -9,5 +9,6 @@ cd build
 cmake ..
 make
 cp ../dictionaries/* ./
+cp ../dictionaries/crashcmd/* ./
 
 cd $CURRDIR
