@@ -52,20 +52,6 @@ ctl.!default {
 
 __Hilfreiche Links__
 
-* http://www.linuxcircle.com/2013/05/08/raspberry-pi-microphone-setup-with-usb-sound-card/
-* https://sites.google.com/site/observing/Home/speech-recognition-with-the-raspberry-pi
-
----
-
-### pulseaudio
-
-* Sphinx benutzt standardmäßig __pulseaudio__, anstatt ALSA, wenn dieses zum Kompilierzeitpunkt vorhanden ist
-
-* __pulseaudio__ installieren
-
-```
-sudo apt-get install pulseaudio
-```
 
 ---
 
@@ -116,6 +102,26 @@ Pocketsphinx konnte die Mikrofonverstärkung nicht einstellen / ändern, wodurch
 __Beispiel:__
 
 Es wird "Light" gesagt, ausgegeben wird aber "Light Light Light On On Light On". Dies deutet auf ein stark verrauschtes Signal (zu hohe Verstärkung)
-oder ein kaum wahrnehmbares Signal (zu niedriege Verstärkung) hin.
+oder ein kaum wahrnehmbares Signal (zu niedrige Verstärkung) hin.
 
 Abhilfe hat hier die Installation von __libasound2-dev__ gebracht. Auch wenn diese Bibliothek nicht installiert ist, kompiliert pocketsphinx anstandslos. Zur Laufzeit kommt jedoch die Warnung, dass die Mikrofonverstärkung nicht eingestellt werden konnte. Nach Installation der Bibliothek, müssen pocketsphinx und sphinxbase __komplett gelöscht__ und die Schritte zu deren Installtion wiederholt werden.
+
+### Schlechte Spracherkennung
+
+Die Befehle wurden schlecht und nur sehr stark verzögert erkannt. Wird die Funktion ```ad_open()``` verwendet, ein Audio Device zu öffnen, wird das Default Gerät (__/dev/dsp__) mit einer Abtastrate von 8000Hz verwendet. 
+Diese niedrige Abtastrate führt zu einer schlechten Qualität der Spracherkennung. Darum sollte die Funktion ```ad_open_sps(int sample_rate)``` verwendet werden, da hier die Abtastrate angegeben werden kann. Ein guter Wert
+stell 44000Hz dar.
+
+## Zu Testen
+
+```
+sudo apt-get install alsa-utils
+```
+
+## Links
+
+### ALSA einrichten
+
+* https://sites.google.com/site/observing/Home/speech-recognition-with-the-raspberry-pi
+* http://www.linuxcircle.com/2013/05/08/raspberry-pi-microphone-setup-with-usb-sound-card/
+

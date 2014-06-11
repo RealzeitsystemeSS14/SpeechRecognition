@@ -10,6 +10,7 @@
 #include <sphinxbase/ad.h>
 #include <sphinxbase/cont_ad.h>
 #include "BlockingQueue.h"
+#include "Utils.h"
 
 typedef struct {
 	pthread_t thread;
@@ -26,6 +27,8 @@ typedef struct {
 	volatile int running;
 	volatile int keepRunning;
 	volatile int record;
+	
+	stopWatch_t watch;
 } inputThread_t;
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue);

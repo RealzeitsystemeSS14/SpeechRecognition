@@ -3,7 +3,7 @@
 #include "InputThread.h"
 #include "Utils.h"
 
-#define BUFFER_SIZE 2048
+#define BUFFER_SIZE 4096
 #define SAMPLE_RATE 44000
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
@@ -155,10 +155,14 @@ static int record(inputThread_t *p_thread)
 
 	signalStartRecording(p_thread);
 	
+	//TODO time taking
+	startWatch(&p_thread->watch);
 	//check if not silent
 	while (((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0) && p_thread->record) 
         usleep(1000);
-
+		
+	stopWatch(&p_thread->watch);
+	PRINT_INFO("First record took %dmsec.\n", getWatchMSec(&p_thread->watch));
 	//add read audio data to audioBuffer
 	addAudioBuffer(resultBuf, buf, ret);
 	

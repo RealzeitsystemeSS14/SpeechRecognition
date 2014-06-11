@@ -48,6 +48,8 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 	char const *hyp, *uttid;
     int32 score;
 	
+	//TODO time taking
+	startWatch(&p_thread->watch);
 	//start utterance, in which the data ist interpreted
 	ret = ps_start_utt(p_thread->psDecoder, NULL);
     if (ret < 0) {
@@ -71,7 +73,8 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
         PRINT_ERR("Failed to get hypothesis.\n");
         return -1;
     }
-	
+	stopWatch(&p_thread->watch);
+	PRINT_INFO("Interpretation took %dmsec.\n", getWatchMSec(&p_thread->watch));
 	*p_outHyp = malloc(sizeof(char) * strlen(hyp) + 1);
 	strcpy(*p_outHyp, hyp);
 	
