@@ -4,7 +4,7 @@
 #include "Utils.h"
 
 #define BUFFER_SIZE 4096
-#define SAMPLE_RATE 44000
+#define SAMPLE_RATE 48000
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 {
@@ -178,6 +178,8 @@ static int record(inputThread_t *p_thread)
         } else if(ret > 0) {
             // valid speech data read
             addAudioBuffer(resultBuf, buf, ret);
+			if(isFullAudioBuffer(resultBuf))
+				PRINT_INFO("AudioBuffer is full!\n");
         } else {
             //no data
             usleep(1000);

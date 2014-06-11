@@ -24,3 +24,8 @@ void clearAudioBuffer(audioBuffer_t *p_buffer)
 {
 	p_buffer->size = 0;
 }
+
+int isFullAudioBuffer(audioBuffer_t *p_buffer)
+{
+	return p_buffer->size >= AUDIO_BUFFER_MAX_SIZE;
+}

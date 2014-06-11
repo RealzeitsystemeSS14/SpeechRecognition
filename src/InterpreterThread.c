@@ -58,7 +58,7 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 	}
         
 	//interprete the audio data
-	ret = ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 0);
+	ret = ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 1);
     if (ret < 0) {
 		PRINT_ERR("Failed to process audio data (%d).\n", ret);
 		ps_end_utt(p_thread->psDecoder);

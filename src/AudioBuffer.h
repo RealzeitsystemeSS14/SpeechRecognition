@@ -19,5 +19,6 @@ typedef struct {
 int initAudioBuffer(audioBuffer_t *p_buffer);
 unsigned int addAudioBuffer(audioBuffer_t *p_buffer, int16_t *p_buf, unsigned int p_count);
 void clearAudioBuffer(audioBuffer_t *p_buffer);
+int isFullAudioBuffer(audioBuffer_t *p_buffer);
 
 #endif
