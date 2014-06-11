@@ -1,16 +1,17 @@
 #include "CrashSimulation.h"
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define CAR_CRASHED(sim) (sim->car.position < sim->distance)
+#define CAR_CRASHED(sim) (sim->car.position >= sim->distance)
 #define CAR_STOPPED(sim) (sim->car.velocity == 0)
-#define CAR_BRAKES(sim) (p_simulation->car.brake)
+#define CAR_BRAKES(sim) (sim->car.brake)
 
-int initSimulation(crashSimulation_t *p_simulation, unsigned int p_velocity, unsigned int p_acceleration, unsigned int p_brakeAcceleration, unsigned int p_distance)
+int initSimulation(crashSimulation_t *p_simulation, unsigned int p_acceleration, unsigned int p_brakeAcceleration, unsigned int p_distance)
 {		
-	p_simulation->car.velocity = p_velocity;
+	p_simulation->car.velocity = 0;
 	p_simulation->car.acceleration = p_acceleration;
 	p_simulation->car.brakeAcceleration = p_brakeAcceleration;
 	p_simulation->car.brake = 0;
+	p_simulation->car.position = 0;
 	p_simulation->distance = p_distance;
 	
 	return 0;

@@ -7,7 +7,6 @@
 #define DEF_DISTANCE 500000
 #define DEF_ACCELERATION 100
 #define DEF_BRAKE_ACCELERATION 100
-#define DEF_VELOCITY 0
 #define SIMULATION_RATE 30
 
 int initCrashSimulationThread(crashSimulationThread_t *p_thread)
@@ -20,7 +19,7 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 		return ret;
 	}
 	
-	ret = initSimulation(&p_thread->simulation, DEF_VELOCITY, DEF_ACCELERATION, DEF_BRAKE_ACCELERATION, DEF_DISTANCE);
+	ret = initSimulation(&p_thread->simulation, DEF_ACCELERATION, DEF_BRAKE_ACCELERATION, DEF_DISTANCE);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init simulation (%d).\n", ret);
 		return ret;

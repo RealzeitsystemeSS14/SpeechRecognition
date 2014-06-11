@@ -7,6 +7,7 @@
 #define BLACK 1
 #define BLUE 2
 #define RED 3
+#define GREEN 4
 
 static BITMAP *dblbuffer;
 
@@ -43,6 +44,11 @@ int initSimulationDrawer(unsigned int p_width, unsigned int p_height)
 	colour.b = 0;
 	set_color(RED, &colour);
 	
+	colour.r = 0;
+	colour.g = 255;
+	colour.b = 0;
+	set_color(GREEN, &colour);
+	
 	// create double buffering bit map to draw on
 	dblbuffer = create_bitmap(SCREEN_W, SCREEN_H);
 	clear(dblbuffer);
@@ -54,7 +60,7 @@ int initSimulationDrawer(unsigned int p_width, unsigned int p_height)
 	return 0;
 }
 
-int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_carCrashed)
+int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_status)
 {
 	unsigned int carSize = PERCENT_OF(SCREEN_W, 3);
 	unsigned int hlineOffset = PERCENT_OF(SCREEN_W, 4);
@@ -71,8 +77,10 @@ int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_ca
 	rectfill(dblbuffer, (carX - carSize) + hlineOffset, (SCREEN_H / 2) - (carSize / 2), hlineOffset + carX, (SCREEN_H / 2) + (carSize / 2), BLUE);
 	
 	// -1 for background to be invisible
-	if(p_carCrashed)
-		textout_centre_ex(dblbuffer, font, "Car crashed", SCREEN_W / 2, 0, RED, -1);
+	if(p_status == -1)
+		textout_centre_ex(dblbuffer, font, "Car crashed!", SCREEN_W / 2, 0, RED, -1);
+	else if(p_status == 1)
+		textout_centre_ex(dblbuffer, font, "Car stopped!", SCREEN_W / 2, 0, GREEN, -1);
 	
 	vsync();
     blit(dblbuffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
