@@ -45,8 +45,8 @@ static int init()
 
     config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
-                         "-lm", "9284.lm",
-                         "-dict", "9284.dic",
+                         "-lm", "2640.lm",
+                         "-dict", "2640.dic",
                          NULL);
 
     if (config == NULL) {
