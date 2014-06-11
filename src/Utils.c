@@ -20,8 +20,8 @@ int stopWatch(stopWatch_t* p_watch)
 	p_watch->tv_sec = end.tv_sec - p_watch->tv_sec;
 	
 	if(end.tv_usec < p_watch->tv_usec) {
-		p_watch->tv_sec += 1;
-		p_watch->tv_usec = USEC_PER_SEC - end.tv_usec + p_watch->tv_usec;
+		p_watch->tv_sec -= 1;
+		p_watch->tv_usec = USEC_PER_SEC - p_watch->tv_usec + end.tv_usec ;
 	} else
 		p_watch->tv_usec = end.tv_usec - p_watch->tv_usec;
 	
