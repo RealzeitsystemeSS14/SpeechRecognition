@@ -4,6 +4,7 @@
 #include "Utils.h"
 
 #define BUFFER_SIZE 2048
+#define SAMPLE_RATE 44000
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 {
@@ -40,7 +41,7 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	}
 	
 	// open audio device, used for recording audio data
-	p_thread->audioDevice = ad_open();
+	p_thread->audioDevice = ad_open_sps(SAMPLE_RATE);
     if (p_thread->audioDevice == NULL) {
 		PRINT_ERR("Failed to open audio device.\n");
         return -1;
@@ -155,13 +156,13 @@ static int record(inputThread_t *p_thread)
 	signalStartRecording(p_thread);
 	
 	//check if not silent
-	//while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0)
-    //    usleep(1000);
+	while (((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0) && p_thread->record) 
+        usleep(1000);
 
 	//add read audio data to audioBuffer
-	//addAudioBuffer(resultBuf, buf, ret);
+	addAudioBuffer(resultBuf, buf, ret);
 	
-	//PRINT_INFO("Received audio.\n");
+	PRINT_INFO("Received audio.\n");
 	
     while(p_thread->record) {
         ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
