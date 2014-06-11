@@ -3,7 +3,7 @@
 #include "InputThread.h"
 #include "Utils.h"
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 2048
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 {
@@ -154,14 +154,14 @@ static int record(inputThread_t *p_thread)
 
 	signalStartRecording(p_thread);
 	
-		//check if not silent
-	while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0)
-        usleep(1000);
+	//check if not silent
+	//while ((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0)
+    //    usleep(1000);
 
 	//add read audio data to audioBuffer
-	addAudioBuffer(resultBuf, buf, ret);
+	//addAudioBuffer(resultBuf, buf, ret);
 	
-	PRINT_INFO("Received audio.\n");
+	//PRINT_INFO("Received audio.\n");
 	
     while(p_thread->record) {
         ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
