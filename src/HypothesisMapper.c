@@ -4,8 +4,8 @@
 #include "Utils.h"
 
 #define STOP_CMD "stop"
-#define START_CMD "start"
-#define RESET_CMD "reset"
+#define START_CMD "run"
+#define RESET_CMD "setup"
 
 #define POISON_PILL "poisonPill"
 #define POISON_PILL_SIZE (strlen(POISON_PILL) + 1)
