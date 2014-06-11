@@ -25,17 +25,15 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 	p_mapper->keepRunning = 1;
 	while(p_mapper->keepRunning) {
 		hyp = dequeueBlockingQueue(p_mapper->hypQueue);
-		
+		//change hypothesis to lower case, to make compare case insensitive
+		toLowerCase(hyp);
 		// check which command was calles
 		if(strcmp(hyp, START_CMD) == 0)
 			startSimulation(p_mapper->simulationThread);
 		else if(strcmp(hyp, STOP_CMD) == 0)
-			brakeCar(&p_mapper->simulationThread->simulation);
+			brakeCar(p_mapper->simulationThread);
 		else if(strcmp(hyp, RESET_CMD) == 0) {
-			//first stop thread from executing simulation.
-			stopSimultaion(p_mapper->simulationThread);
-			//then reset simulation itself
-			resetSimulation(&p_mapper->simulationThread->simulation);
+			resetSimulation(p_mapper->simulationThread);
 		} else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
 		
@@ -45,6 +43,7 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 
 int stopHypothesisMapper(hypothesisMapper_t *p_mapper)
 {
+	//create poison pill for hypQueue, else thread might be blocking forever
 	char *poisonPill = malloc(sizeof(char) * POISON_PILL_SIZE);
 	if(poisonPill == NULL)
 		return -1;

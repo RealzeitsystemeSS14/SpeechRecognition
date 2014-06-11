@@ -45,10 +45,8 @@ static int init()
 
     config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
-                         "-lm", "1048.lm",
-                         "-dict", "1048.dic",
-                         //"-lm", MODELDIR "/lm/en/turtle.DMP",
-                         //"-dict", MODELDIR "/lm/en/turtle.dic",
+                         "-lm", "9284.lm",
+                         "-dict", "9284.dic",
                          NULL);
 
     if (config == NULL) {

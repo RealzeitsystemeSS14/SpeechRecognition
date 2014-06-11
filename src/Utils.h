@@ -14,5 +14,6 @@ typedef struct {
 
 int initRate(rate_t* p_rate, unsigned int p_targetRate);
 int sleepRate(rate_t* p_rate);
+void toLowerCase(char *p_str);
 
 #endif

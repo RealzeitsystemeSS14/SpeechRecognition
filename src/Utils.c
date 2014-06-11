@@ -41,3 +41,11 @@ int sleepRate(rate_t* p_rate)
 	
 	return 0;
 }
+
+void toLowerCase(char *p_str)
+{
+	int i;
+	for(i = 0; p_str[i]; i++){
+		p_str[i] = tolower(p_str[i]);
+	}
+}
