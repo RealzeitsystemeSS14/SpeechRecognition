@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 
-#define AUDIO_BUFFER_MAX_SIZE 8192
+#define AUDIO_BUFFER_MAX_SIZE 32768
 
 typedef struct {
 	int16_t buffer[AUDIO_BUFFER_MAX_SIZE];
