@@ -60,10 +60,32 @@ int initSimulationDrawer(unsigned int p_width, unsigned int p_height)
 	return 0;
 }
 
+int drawCar(unsigned int p_carPosition, unsigned int p_hlineOffset)
+{
+	unsigned int carWidth = PERCENT_OF(SCREEN_H, 3);
+	unsigned int carLength = (unsigned int) (carWidth * 1.5);
+	unsigned int wheelLength = carLength / 6;
+	unsigned int wheelWidth = (wheelLength * 2) / 3;
+	unsigned int carFront = p_hlineOffset + p_carPosition;
+	unsigned int carBack = (p_carPosition - carLength) + p_hlineOffset;
+	
+	//draw Car
+	rectfill(dblbuffer, carBack, (SCREEN_H / 2) - (carWidth / 2), carFront, (SCREEN_H / 2) + (carWidth / 2), BLUE);
+	//top left wheel
+	rectfill(dblbuffer, carBack + wheelLength, (SCREEN_H / 2) - (carWidth / 2) - wheelWidth - 1, carBack + 2 * wheelLength, (SCREEN_H / 2) - (carWidth / 2) - 1, BLACK);
+	//bot left wheel
+	rectfill(dblbuffer, carBack + wheelLength, (SCREEN_H / 2) + (carWidth / 2) + 1, carBack + 2 * wheelLength, (SCREEN_H / 2) + (carWidth / 2) + wheelWidth + 1, BLACK);
+	//top right wheel
+	rectfill(dblbuffer, carFront - 2 * wheelLength , (SCREEN_H / 2) - (carWidth / 2) - wheelWidth - 1, carFront - wheelLength, (SCREEN_H / 2) - (carWidth / 2) - 1, BLACK);
+	//bot right wheel
+	rectfill(dblbuffer, carFront - 2 * wheelLength, (SCREEN_H / 2) + (carWidth / 2) + 1, carFront - wheelLength, (SCREEN_H / 2) + (carWidth / 2) + wheelWidth + 1, BLACK);
+	
+	return 0;
+}
+
 int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_status)
 {
-	unsigned int carSize = PERCENT_OF(SCREEN_W, 3);
-	unsigned int hlineOffset = PERCENT_OF(SCREEN_W, 4);
+	unsigned int hlineOffset = PERCENT_OF(SCREEN_W, 5);
 	unsigned int hlineLength = SCREEN_W - hlineOffset * 2;
 	unsigned int vlineOffset = PERCENT_OF(SCREEN_H, 4);
 	unsigned int vlineLength = SCREEN_H - vlineOffset * 2;
@@ -74,7 +96,7 @@ int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_st
 	
 	hline(dblbuffer, hlineOffset, SCREEN_H / 2, hlineOffset + hlineLength, BLACK);
 	vline(dblbuffer, hlineOffset + hlineLength, vlineOffset, vlineOffset + vlineLength, BLACK);
-	rectfill(dblbuffer, (carX - carSize) + hlineOffset, (SCREEN_H / 2) - (carSize / 2), hlineOffset + carX, (SCREEN_H / 2) + (carSize / 2), BLUE);
+	drawCar(carX, hlineOffset);
 	
 	// -1 for background to be invisible
 	if(p_status == -1)

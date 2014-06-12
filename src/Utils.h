@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <libgen.h>
 
-#define PRINT_ERR(msg, ...) fprintf(stderr, "In %s (%d): " msg , __FILE__, __LINE__, ##__VA_ARGS__)
+#define PRINT_ERR(msg, ...) fprintf(stderr, "In %s (%d): " msg , basename(__FILE__), __LINE__, ##__VA_ARGS__)
 #define PRINT_INFO(msg, ...) printf(msg, ##__VA_ARGS__)
 
 typedef	struct timeval stopWatch_t;

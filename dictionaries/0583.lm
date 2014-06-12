@@ -1,4 +1,4 @@
-Language model created by QuickLM on Wed Jun 11 10:39:43 EDT 2014
+Language model created by QuickLM on Thu Jun 12 08:44:00 EDT 2014
 Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
 
 The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
@@ -17,21 +17,21 @@ ngram 3=3
 \1-grams:
 -0.7782 </s> -0.3010
 -0.7782 <s> -0.2218
+-1.2553 RESET -0.2218
 -1.2553 RUN -0.2218
--1.2553 SETUP -0.2218
 -1.2553 STOP -0.2218
 
 \2-grams:
+-0.7782 <s> RESET 0.0000
 -0.7782 <s> RUN 0.0000
--0.7782 <s> SETUP 0.0000
 -0.7782 <s> STOP 0.0000
+-0.3010 RESET </s> -0.3010
 -0.3010 RUN </s> -0.3010
--0.3010 SETUP </s> -0.3010
 -0.3010 STOP </s> -0.3010
 
 \3-grams:
+-0.3010 <s> RESET </s>
 -0.3010 <s> RUN </s>
--0.3010 <s> SETUP </s>
 -0.3010 <s> STOP </s>
 
 \end\
