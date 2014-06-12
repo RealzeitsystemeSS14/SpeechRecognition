@@ -29,6 +29,14 @@ sudo rpi-update
 
 ### ALSA
 
+* zur Überprüfung ob ALSA richtig eingerichtet ist, können folgende Befehle genutzt werden
+* in beiden Fällen sollte die USB-Karte an erster Stelle stehen
+
+```
+cat /proc/asound/cards
+cat /proc/asound/modules
+```
+
 * für sphinx müssen die device files __/dev/dsp*__ vorhanden sein
 * autom. anlegen:
 
