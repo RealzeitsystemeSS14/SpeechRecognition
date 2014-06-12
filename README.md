@@ -131,6 +131,12 @@ Die Befehle wurden schlecht und nur sehr stark verzögert erkannt. Wird die Funk
 Diese niedrige Abtastrate führt zu einer schlechten Qualität der Spracherkennung. Darum sollte die Funktion ```ad_open_sps(int sample_rate)``` verwendet werden, da hier die Abtastrate angegeben werden kann. Ein guter Wert
 stell __48000Hz__ dar.
 
+Die __Vergrößerung des AudioBuffers__, der zur Übertragung der Sprachdaten zwischen InputThread und InterpreterThread genutzt wird, auf __32k mal int16__ hat zu einer deutlich schnelleren Spracherkennung geführt.
+
+Aufgrund des kleinen Puffers sind in vorherigen Tests auch einige Befehle verloren gegangen. Pocketsphinx kann mit dem größeren Puffer Sprachdaten auch mit größerer Wahrscheinlichkeit korrekt interpretieren.
+
+Der Aufruf der Funktion ```ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 1);``` sollte als letztes Argument __true__ erhalten. Damit wird Pocketsphinx mitgeteilt, dass der übergebene Puffer __sämtliche Audiodaten__ für die Interpretation des Befehls beinhaltet und nichts weiter dazu kommt. Dadurch wird die Sicherheit und Effizienz der Interpretation erhöht.
+
 ## Zu Testen
 
 ```
