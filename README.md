@@ -158,3 +158,7 @@ sudo apt-get install alsa-utils
 * https://sites.google.com/site/observing/Home/speech-recognition-with-the-raspberry-pi
 * http://www.linuxcircle.com/2013/05/08/raspberry-pi-microphone-setup-with-usb-sound-card/
 
+### pocketsphinx
+
+* http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds
+
