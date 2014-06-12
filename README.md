@@ -73,6 +73,39 @@ ctl.!default {
 
 ---
 
+### pulseaudio
+
+* am Desktop Rechner wird pulseaudio verwendet, daher muss das USB-Mikrofon als Default device ausgewählt werden
+
+```
+mkdir -p ~/.pulse
+cp /etc/pulse/default.pa ~/.pulse
+vim ~/.pulse/default.pa
+```
+
+* nun müssen folgende Einträge gemacht werden
+
+```
+>>>>> die Zeile ändern
+set-default-source input
+<<<<< in
+set-default-source <device-name>
+```
+
+* den device name kann man mit dem befehl ```pacmd``` herausbekommen, dieser steht dort hinter dem tag __name:__
+* der name wird ohne die spitzen Klammern ( <name> ) eingetragen
+* nun muss noch eingestellt werden, dass das Mikrofon beim Start nicht stumm geschaltet wird
+* auch in der Datei __~/.pulse/default.pa__ folgende Zeile hinzufügen
+
+
+```
+set-source-mute 1 0
+```
+
+* 0 bedeutet hierbei __false__, die 1 bedeutet die Anzahl der Geräte, angefangen beim Default Device
+
+---
+
 ### pocketsphinx
 
 * folgende Pakete müssen zuerst installiert werden
@@ -153,10 +186,14 @@ sudo apt-get install alsa-utils
 
 ## Links
 
-### ALSA einrichten
+### ALSA
 
 * https://sites.google.com/site/observing/Home/speech-recognition-with-the-raspberry-pi
 * http://www.linuxcircle.com/2013/05/08/raspberry-pi-microphone-setup-with-usb-sound-card/
+
+### pulseaudio
+
+* http://askubuntu.com/questions/31206/how-can-my-audio-input-always-be-the-webcam-microphone
 
 ### pocketsphinx
 
