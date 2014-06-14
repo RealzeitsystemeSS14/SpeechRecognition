@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <allegro.h>
 #include "InputThread.h"
 #include "InterpreterThread.h"
 #include "ButtonThread.h"
@@ -40,13 +41,17 @@ static int init()
 {
 	cmd_ln_t *config;
 	
+	PRINT_INFO("Initializing allegro...");
+	allegro_init();
+	PRINT_INFO(" [Done]\n");
+	
 	err_set_logfp(fopen("/dev/null", "w"));
 	PRINT_INFO("Getting Config...\n");
 
     config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
-                         "-lm", "4461.lm",
-                         "-dict", "4461.dic",
+                         "-lm", "6706.lm",
+                         "-dict", "6706.dic",
                          NULL);
 
     if (config == NULL) {
@@ -63,37 +68,37 @@ static int init()
 	PRINT_INFO("Init AudioQueue...");
 	fflush(stdout);
 	if(initBlockingQueue(&audioQueue, AUDIO_QUEUE_SIZE) != 0)
-		return -2;
+		return -1;
 	PRINT_INFO(" [Done]\n");
 	
 	PRINT_INFO("Init InputThread...");
 	fflush(stdout);
 	if(initInputThread(&inputThread, &audioQueue) != 0)
-		return -3;
+		return -1;
 	PRINT_INFO(" [Done]\n");
 	
 	PRINT_INFO("Init InterpreterThread...");
 	fflush(stdout);
 	if(initInterpreterThread(&interpreterThread, &audioQueue, &hypQueue, config) != 0)
-		return -4;
+		return -1;
 	PRINT_INFO(" [Done]\n");
 	
 	PRINT_INFO("Init ButtonThread...");
 	fflush(stdout);
 	if(initButtonThread(&buttonThread, &inputThread) != 0)
-		return -4;
+		return -1;
 	PRINT_INFO(" [Done]\n");
 	
 	PRINT_INFO("Init SimulationThread...");
 	fflush(stdout);
 	if(initCrashSimulationThread(&simulationThread) != 0)
-		return -5;
+		return -1;
 	PRINT_INFO(" [Done]\n");
 	
 	PRINT_INFO("Init HypothesisMapper...");
 	fflush(stdout);
 	if(initHypothesisMapper(&hypMapper, &hypQueue, &simulationThread) != 0)
-		return -6;
+		return -1;
 	PRINT_INFO(" [Done]\n");
 	
 	return 0;
@@ -134,6 +139,8 @@ static void destroy()
 	
 	destroyBlockingQueue(&audioQueue, 1);
 	destroyBlockingQueue(&hypQueue, 1);
+	
+	allegro_exit();
 }
 
 int main(int argc, char** argv)

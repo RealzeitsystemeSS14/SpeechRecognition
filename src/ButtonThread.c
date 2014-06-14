@@ -1,5 +1,6 @@
 #include "ButtonThread.h"
 #include "Utils.h"
+#include "SimulationDrawer.h"
 
 int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
 {
@@ -36,10 +37,12 @@ static void* runThread(void * arg)
 		if(!buttonThread->keepRunning)
 			break;
 		startRecording(buttonThread->inputThread);
+		setSpeechState(LISTENING_SPEECH_STATE);
 		
 		PRINT_INFO("Press RETURN to end recording.\n");
 		getchar();
 		stopRecording(buttonThread->inputThread);
+		setSpeechState(WAITING_SPEECH_STATE);
 	}
 	
 	buttonThread->running = 0;

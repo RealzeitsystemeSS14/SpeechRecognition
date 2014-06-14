@@ -19,7 +19,7 @@ int initSimulation(crashSimulation_t *p_simulation, unsigned int p_acceleration,
 
 int stepSimulation(crashSimulation_t *p_simulation)
 {
-	unsigned int toDec;
+	unsigned int toDec, toInc;
 	int ret;
 	
 	// check if car already crashed into the wall
@@ -40,6 +40,7 @@ int stepSimulation(crashSimulation_t *p_simulation)
 		} else {
 			// only if car has not crashed and does not brake
 			// simulate accelerating
+			toInc = MIN(p_simulation->car.velocity, p_simulation->distance - p_simulation->car.position);
 			p_simulation->car.position += p_simulation->car.velocity;
 			p_simulation->car.velocity += p_simulation->car.acceleration;
 			ret = 0;

@@ -168,11 +168,11 @@ Abhilfe hat hier die Installation von __libasound2-dev__ gebracht. Auch wenn die
 
 ### Schlechte Spracherkennung
 
-Die Befehle wurden schlecht und nur sehr stark verzögert erkannt. Wird die Funktion ```ad_open()``` verwendet, ein Audio Device zu öffnen, wird das Default Gerät (__/dev/dsp__) mit einer Abtastrate von 8000Hz verwendet. 
+Die Befehle wurden schlecht und nur sehr stark verzögert erkannt. Wird die Funktion ```ad_open()``` verwendet, ein Audio Device zu öffnen, wird das Default Gerät mit einer Abtastrate von 8000Hz verwendet. 
 Diese niedrige Abtastrate führt zu einer schlechten Qualität der Spracherkennung. Darum sollte die Funktion ```ad_open_sps(int sample_rate)``` verwendet werden, da hier die Abtastrate angegeben werden kann. Ein guter Wert
 stell __48000Hz__ dar.
 
-Die __Vergrößerung des AudioBuffers__, der zur Übertragung der Sprachdaten zwischen InputThread und InterpreterThread genutzt wird, auf __32k mal int16__ hat zu einer deutlich schnelleren Spracherkennung geführt.
+Die __Vergrößerung des AudioBuffers__, der zur Übertragung der Sprachdaten zwischen InputThread und InterpreterThread genutzt wird, auf __16k mal int16__ war notwendig, da der Buffer sonst zu kurz war, um die Befehle aufzunehmen.
 
 Aufgrund des kleinen Puffers sind in vorherigen Tests auch einige Befehle verloren gegangen. Pocketsphinx kann mit dem größeren Puffer Sprachdaten auch mit größerer Wahrscheinlichkeit korrekt interpretieren.
 

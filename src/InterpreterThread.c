@@ -25,11 +25,12 @@ int initInterpreterThread(interpreterThread_t *p_thread, blockingQueue_t *p_audi
 int destroyInterpreterThread(interpreterThread_t *p_thread)
 {
 	int ret = 0;
-	if(p_thread->running)
+	if(p_thread->running) {
 		ret = pthread_cancel(p_thread->thread);
-	if(ret != 0) {
-		PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-		return ret;
+		if(ret != 0) {
+			PRINT_ERR("Failed to cancel thread (%d).\n", ret);
+			return ret;
+		}
 	}
 	
 	//free decoder

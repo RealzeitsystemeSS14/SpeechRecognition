@@ -2,8 +2,8 @@
 #include "SimulationDrawer.h"
 #include "Utils.h"
 
-#define DRAWER_WIDTH 640
-#define DRAWER_HEIGHT 480
+#define GUI_WIDTH 640
+#define GUI_HEIGHT 480
 #define DEF_DISTANCE 500000
 #define DEF_ACCELERATION 100
 #define DEF_BRAKE_ACCELERATION 100
@@ -29,7 +29,7 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 	p_thread->running = 0;
 	p_thread->exitCode = 0;
 	
-	ret = initSimulationDrawer(DRAWER_WIDTH, DRAWER_HEIGHT);
+	ret = initSimulationDrawer(GUI_WIDTH, GUI_HEIGHT);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init SimulationDrawer (%d).\n", ret);
 		return ret;
@@ -100,7 +100,6 @@ static void* runThread(void *arg)
 	while(simulationThread->keepRunning) {
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
-			
 			ret = stepSimulationThreadSafe(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
@@ -144,6 +143,9 @@ int joinCrashSimulationThread(crashSimulationThread_t *p_thread)
 
 int startSimulation(crashSimulationThread_t *p_thread)
 {
+	pthread_mutex_lock(&p_thread->simulationMutex);
+	p_thread->simulation.car.brake = 0;
+	pthread_mutex_unlock(&p_thread->simulationMutex);
 	p_thread->simulate = 1;
 	return 0;
 }

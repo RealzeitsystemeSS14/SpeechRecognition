@@ -24,11 +24,10 @@ int decode()
         printf("Error starting recording.\n");
         return 0;
     }
-
+	
     // Check if not silent
     while ((ret = cont_ad_read(c_ad, buf, BUFFER_SIZE)) == 0)
         usleep(1000);
-
     if (ret < 0) {
         printf("Failed to record audio.\n");
         return 0;

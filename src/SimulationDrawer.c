@@ -9,19 +9,22 @@
 #define RED 3
 #define GREEN 4
 
-static BITMAP *dblbuffer;
+#define BOX_BORDER_WIDTH 2
 
-int initSimulationDrawer(unsigned int p_width, unsigned int p_height)
+static BITMAP *dblbuffer;
+static volatile int speechState;
+
+int initSimulationDrawer(int p_width, int p_height)
 {
 	int ret;
 	RGB colour;
-	allegro_init();
 	
-	ret = set_gfx_mode(GFX_AUTODETECT_WINDOWED, p_width, p_height, 0, 0);
-	if (ret < 0) {
+	if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, p_width, p_height, 0, 0) < 0) {
 		PRINT_ERR("Couldn't set gfx mode: %s\n", allegro_error);
-		return ret;
+		return -1;
 	}
+	
+	speechState = WAITING_SPEECH_STATE;
 	
 	// create colours
 	colour.r = 255;
@@ -83,6 +86,31 @@ int drawCar(unsigned int p_carPosition, unsigned int p_hlineOffset)
 	return 0;
 }
 
+int drawSpeechState() {
+	char *text;
+	int color;
+	if(speechState == WAITING_SPEECH_STATE) {
+		color = RED;
+		text = "Waiting";
+	} else if(speechState == LISTENING_SPEECH_STATE) {
+		color = GREEN;
+		text = "Listening";
+	} else {
+		return -1;
+	}
+	
+	unsigned int boxLeftOffset = PERCENT_OF(SCREEN_W, 1);
+	unsigned int boxTopOffset = PERCENT_OF(SCREEN_H, 1);
+	unsigned int boxWidth = PERCENT_OF(SCREEN_W, 12);
+	unsigned int boxHeight = PERCENT_OF(SCREEN_W, 6);
+	
+	rectfill(dblbuffer, boxLeftOffset - BOX_BORDER_WIDTH, boxTopOffset - BOX_BORDER_WIDTH, boxLeftOffset + boxWidth + BOX_BORDER_WIDTH, boxTopOffset + boxHeight + BOX_BORDER_WIDTH, BLACK);
+	rectfill(dblbuffer, boxLeftOffset, boxTopOffset, boxLeftOffset + boxWidth, boxTopOffset + boxHeight, color);
+	textout_centre_ex(dblbuffer, font, text, boxLeftOffset + (boxWidth / 2), boxTopOffset + (boxHeight / 2) - 2, BLACK, -1);
+	
+	return 0;
+}
+
 int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_status)
 {
 	unsigned int hlineOffset = PERCENT_OF(SCREEN_W, 5);
@@ -104,6 +132,8 @@ int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_st
 	else if(p_status == 1)
 		textout_centre_ex(dblbuffer, font, "Car stopped!", SCREEN_W / 2, 0, GREEN, -1);
 	
+	drawSpeechState();
+	
 	vsync();
     blit(dblbuffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
 	
@@ -114,7 +144,10 @@ int destroySimulationDrawer()
 {
 	destroy_bitmap(dblbuffer);
 	
-	allegro_exit();
-	
 	return 0;
+}
+
+int setSpeechState(int p_speechState)
+{
+	speechState = p_speechState;
 }
