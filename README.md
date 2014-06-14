@@ -114,13 +114,13 @@ set-source-mute 1 0
 sudo apt-get install alsa-utils bison libasound2-dev
 ```
 
-* nun muss __sphinx base__ installiert werden
+* nun muss __sphinx base__ installiert werden (--enable-fixed sorgt, dafür, dass Fetskommazahlen benutzt werden; verbessert die performance)
 
 ```
 wget -O sphinxbase-0.8.tar.gz http://sourceforge.net/projects/cmusphinx/files/sphinxbase/0.8/sphinxbase-0.8.tar.gz/download
 tar xzf sphinxbase-0.8.tar.gz
 cd sphinxbase-0.8
-./configure
+./configure --enable-fixed
 make
 sudo make install
 ```
@@ -183,6 +183,11 @@ Der Aufruf der Funktion ```ps_process_raw(p_thread->psDecoder, buffer->buffer, b
 ```
 sudo apt-get install alsa-utils
 ```
+
+### pocketsphinx Einstellungen
+
+Pocketsphinx reagiert registriert Input recht langsam (3,5 bis 6 Sekunden), daher müssen die Einstellungen für pocketsphinx geändert werden.
+Mit dem Tool ```pocketsphinx_batch``` lassen sich alle Argumente für pocketsphinx und deren Default-Werte ausgeben. Für gute Einstellmöglichkeiten, um pocketsphinx schneller zu machen, kann [hier](http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds) nachgeschaut werden.
 
 ## Links
 

@@ -52,6 +52,12 @@ static int init()
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
                          "-lm", "6706.lm",
                          "-dict", "6706.dic",
+						 "-ds", "2",
+						 "-topn", "2",
+						 "-maxwpf", "5",
+						 "-maxhmmpf", "3000",
+						 "-kdmaxdepth", "5",
+						 "-kdmaxbbi", "16",
                          NULL);
 
     if (config == NULL) {
