@@ -1,6 +1,10 @@
 #include "InterpreterThread.h"
 #include "AudioBuffer.h"
+#include "AudioBufferPool.h"
+#include "StringPool.h"
 #include "Utils.h"
+
+static audioBuffer_t poisonPill;
 
 int initInterpreterThread(interpreterThread_t *p_thread, blockingQueue_t *p_audioQueue, blockingQueue_t *p_hypQueue, cmd_ln_t *p_config)
 {
@@ -76,7 +80,7 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
     }
 	stopWatch(&p_thread->watch);
 	PRINT_INFO("Interpretation took %dmsec.\n", getWatchMSec(&p_thread->watch));
-	*p_outHyp = malloc(sizeof(char) * strlen(hyp) + 1);
+	*p_outHyp = reserveString();
 	strcpy(*p_outHyp, hyp);
 	
 	return 0;
@@ -95,12 +99,15 @@ static void* runThread(void * arg)
 	
 	while(interpreterThread->keepRunning) {
 		buffer = (audioBuffer_t*) dequeueBlockingQueue(interpreterThread->audioQueue);
+		// start next iteration if received poison pill -> keepRunning should be false now
+		if(buffer == &poisonPill)
+			continue;
 		if(buffer->size != 0) {
 			interpreterThread->exitCode = interprete(interpreterThread, buffer, &hyp);
 			if(interpreterThread->exitCode == 0)
 				enqueueBlockingQueue(interpreterThread->hypQueue, (void*) hyp);
 		}
-		free(buffer);
+		releaseAudioBuffer(buffer);
 	}
 	interpreterThread->running = 0;
 	PRINT_INFO("InterpreterThread terminated.\n");
@@ -126,14 +133,7 @@ int stopInterpreterThread(interpreterThread_t *p_thread)
 {
 	int ret;
 	p_thread->keepRunning = 0;
-	audioBuffer_t *poisonPill = malloc(sizeof(audioBuffer_t));
-	ret = initAudioBuffer(poisonPill);
-	if(ret != 0) {
-		PRINT_ERR("Failed to init poison pill (%d).\n", ret);
-		free(poisonPill);
-		return ret;
-	}
-	enqueueBlockingQueue(p_thread->audioQueue, poisonPill);
+	enqueueBlockingQueue(p_thread->audioQueue, &poisonPill);
 	
 	return 0;
 }

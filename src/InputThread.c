@@ -1,11 +1,12 @@
 #include <string.h>
 #include "AudioBuffer.h"
+#include "AudioBufferPool.h"
 #include "InputThread.h"
 #include "Utils.h"
 
 #define MAX_RETRIES 10
 #define BUFFER_SIZE 1024
-#define SAMPLE_RATE 36000
+#define SAMPLE_RATE 48000
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 {
@@ -135,12 +136,8 @@ static int record(inputThread_t *p_thread)
     int ret = 0;
     int16 buf[BUFFER_SIZE];
 	
-	//create audioBuffer for audioQueue
-	audioBuffer_t *resultBuf = (audioBuffer_t*) malloc(sizeof(audioBuffer_t));
-	if(resultBuf == NULL) {
-		PRINT_ERR("Failed to malloc resultBuf.\n");
-		return -1;
-	}
+	//get audioBuffer for audioQueue
+	audioBuffer_t *resultBuf = reserveAudioBuffer();
 	
 	ret = initAudioBuffer(resultBuf);
 	if(ret != 0) {

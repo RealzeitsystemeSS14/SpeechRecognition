@@ -7,9 +7,6 @@
 #include "HypothesisMapper.h"
 #include "Utils.h"
 
-#define HYP_QUEUE_SIZE 10
-#define AUDIO_QUEUE_SIZE 10
-
 struct sigaction sa;
 
 blockingQueue_t audioQueue;
@@ -65,15 +62,26 @@ static int init()
         return -1;
     }
 	
+	PRINT_INFO("Init AudioBufferPool...");
+	fflush(stdout);
+	if(initAudioBufferPool() != 0)
+		return -1;
+	PRINT_INFO(" [Done]\n");
+	
+	PRINT_INFO("Init StringPool...");
+	if(initStringPool() != 0)
+		return -1;
+	PRINT_INFO(" [Done]\n");
+	
 	PRINT_INFO("Init HypQueue...");
 	fflush(stdout);
-	if(initBlockingQueue(&hypQueue, HYP_QUEUE_SIZE) != 0)
+	if(initBlockingQueue(&hypQueue) != 0)
 		return -1;
 	PRINT_INFO(" [Done]\n");
 	
 	PRINT_INFO("Init AudioQueue...");
 	fflush(stdout);
-	if(initBlockingQueue(&audioQueue, AUDIO_QUEUE_SIZE) != 0)
+	if(initBlockingQueue(&audioQueue) != 0)
 		return -1;
 	PRINT_INFO(" [Done]\n");
 	
@@ -143,8 +151,8 @@ static void destroy()
 	destroyInterpreterThread(&interpreterThread);
 	destroyInputThread(&inputThread);
 	
-	destroyBlockingQueue(&audioQueue, 1);
-	destroyBlockingQueue(&hypQueue, 1);
+	destroyBlockingQueue(&audioQueue, 0);
+	destroyBlockingQueue(&hypQueue, 0);
 	
 	allegro_exit();
 }

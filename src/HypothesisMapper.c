@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "HypothesisMapper.h"
+#include "StringPool.h"
 #include "Utils.h"
 
 #define STOP_CMD "stop"
@@ -8,7 +9,7 @@
 #define RESET_CMD "reset"
 
 #define POISON_PILL "poisonPill"
-#define POISON_PILL_SIZE (strlen(POISON_PILL) + 1)
+static char *poisonPill = POISON_PILL;
 
 int initHypothesisMapper(hypothesisMapper_t *p_mapper, blockingQueue_t *p_hypQueue, crashSimulationThread_t *p_simulationThread)
 {
@@ -25,6 +26,10 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 	p_mapper->keepRunning = 1;
 	while(p_mapper->keepRunning) {
 		hyp = dequeueBlockingQueue(p_mapper->hypQueue);
+		// if poison pill jump to next iteration -> keepRunning should now be false
+		if(hyp == poisonPill)
+			continue;
+			
 		//change hypothesis to lower case, to make compare case insensitive
 		toLowerCase(hyp);
 		// check which command was called
@@ -38,18 +43,12 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		} else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
 		
-		free(hyp);
+		releaseString(hyp);
 	}
 }
 
 int stopHypothesisMapper(hypothesisMapper_t *p_mapper)
 {
-	//create poison pill for hypQueue, else thread might be blocking forever
-	char *poisonPill = malloc(sizeof(char) * POISON_PILL_SIZE);
-	if(poisonPill == NULL)
-		return -1;
-	strcpy(poisonPill, POISON_PILL);
-	
 	p_mapper->keepRunning = 0;
 	enqueueBlockingQueue(p_mapper->hypQueue, poisonPill);
 	

@@ -178,6 +178,8 @@ Aufgrund des kleinen Puffers sind in vorherigen Tests auch einige Befehle verlor
 
 Der Aufruf der Funktion ```ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 1);``` sollte als letztes Argument __true__ erhalten. Damit wird Pocketsphinx mitgeteilt, dass der übergebene Puffer __sämtliche Audiodaten__ für die Interpretation des Befehls beinhaltet und nichts weiter dazu kommt. Dadurch wird die Sicherheit und Effizienz der Interpretation erhöht.
 
+Der Pocketsphinxdecoder muss vor den Audiodevices initialisiert werden, damit die Konfigurationen, die nur (!) an den Decoder übergeben werden, auch für die Devices übernommen werden.
+
 ## Zu Testen
 
 ```

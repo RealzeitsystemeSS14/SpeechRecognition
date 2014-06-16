@@ -8,8 +8,10 @@
 
 #include <pthread.h>
 
+#define BLOCKING_QUEUE_SIZE 5
+
 typedef struct blockingQueue{
-	void **elements;
+	void *elements[BLOCKING_QUEUE_SIZE];
 	unsigned int size;
 	unsigned int maxSize;
 	
@@ -18,7 +20,7 @@ typedef struct blockingQueue{
 	pthread_cond_t pushCondition;
 } blockingQueue_t;
 
-int initBlockingQueue(blockingQueue_t *p_queue, unsigned int p_size);
+int initBlockingQueue(blockingQueue_t *p_queue);
 int destroyBlockingQueue(blockingQueue_t *p_queue, int p_freeElements);
 void enqueueBlockingQueue(blockingQueue_t *p_queue, void *p_element);
 void* dequeueBlockingQueue(blockingQueue_t *p_queue);

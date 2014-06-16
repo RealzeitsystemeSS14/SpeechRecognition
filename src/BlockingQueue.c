@@ -4,11 +4,10 @@
 #define IS_EMPTY(queue) (queue->size == 0)
 #define IS_FULL(queue) (queue->size == queue->maxSize)
 
-int initBlockingQueue(blockingQueue_t *p_queue, unsigned int p_size)
+int initBlockingQueue(blockingQueue_t *p_queue)
 {
 	int ret;
-	p_queue->maxSize = p_size;
-	p_queue->elements = malloc(sizeof(void*) * p_size);
+	p_queue->maxSize = BLOCKING_QUEUE_SIZE;
 	if(p_queue->elements == NULL) 
 		return -1;
 		
@@ -45,7 +44,6 @@ int destroyBlockingQueue(blockingQueue_t *p_queue, int p_freeElements)
 		return ret;
 		
 	clearBlockingQueue(p_queue, p_freeElements);
-	free(p_queue->elements);
 	
 	return 0;
 }
