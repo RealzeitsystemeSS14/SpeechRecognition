@@ -77,15 +77,15 @@ static int init()
 		return -1;
 	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init InputThread...");
-	fflush(stdout);
-	if(initInputThread(&inputThread, &audioQueue) != 0)
-		return -1;
-	PRINT_INFO(" [Done]\n");
-	
 	PRINT_INFO("Init InterpreterThread...");
 	fflush(stdout);
 	if(initInterpreterThread(&interpreterThread, &audioQueue, &hypQueue, config) != 0)
+		return -1;
+	PRINT_INFO(" [Done]\n");
+	
+	PRINT_INFO("Init InputThread...");
+	fflush(stdout);
+	if(initInputThread(&inputThread, &audioQueue) != 0)
 		return -1;
 	PRINT_INFO(" [Done]\n");
 	
