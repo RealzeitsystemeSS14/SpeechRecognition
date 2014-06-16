@@ -1,9 +1,13 @@
+#include <allegro.h>
 #include "ButtonThread.h"
 #include "Utils.h"
 #include "SimulationDrawer.h"
 
 int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
 {
+	install_timer();
+	install_keyboard();
+	
 	p_thread->inputThread = p_inputThread;
 	p_thread->running = 0;
 	p_thread->exitCode = 0;
@@ -20,6 +24,8 @@ int destroyButtonThread(buttonThread_t *p_thread)
 		return ret;
 	}
 	
+	remove_keyboard();
+	
 	return 0;
 }
 
@@ -29,20 +35,31 @@ static void* runThread(void * arg)
 	buttonThread_t *buttonThread = (buttonThread_t*) arg;
 	buttonThread->running = 1;
 	buttonThread->exitCode = 0;
+	int displayTxt = 1;
 	
 	while(buttonThread->keepRunning) {
-		sleep(1);
-		PRINT_INFO("Press RETURN to record data.\n");
-		getchar();
-		if(!buttonThread->keepRunning)
-			break;
-		startRecording(buttonThread->inputThread);
-		setSpeechState(LISTENING_SPEECH_STATE);
+		if(displayTxt) {
+			PRINT_INFO("Press SPACE to record data.\n");
+			displayTxt = 0;
+		}
 		
-		PRINT_INFO("Press RETURN to end recording.\n");
-		getchar();
-		stopRecording(buttonThread->inputThread);
-		setSpeechState(WAITING_SPEECH_STATE);
+		if(key[KEY_SPACE]) {
+			
+			startRecording(buttonThread->inputThread);
+			setSpeechState(LISTENING_SPEECH_STATE);
+			
+			while(key[KEY_SPACE] && buttonThread->keepRunning)
+				usleep(10000);
+				
+			if(!buttonThread->keepRunning)
+				break;
+				
+			stopRecording(buttonThread->inputThread);
+			setSpeechState(WAITING_SPEECH_STATE);
+			displayTxt = 1;
+		} else {
+			usleep(10000);
+		}
 	}
 	
 	buttonThread->running = 0;
