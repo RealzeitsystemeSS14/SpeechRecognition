@@ -3,6 +3,7 @@
 #include "AudioBufferPool.h"
 #include "StringPool.h"
 #include "Utils.h"
+#include "TimeTaking.h"
 
 static audioBuffer_t poisonPill;
 
@@ -53,8 +54,6 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 	char const *hyp, *uttid;
     int32 score;
 	
-	//TODO time taking
-	startWatch(&p_thread->watch);
 	//start utterance, in which the data ist interpreted
 	ret = ps_start_utt(p_thread->psDecoder, NULL);
     if (ret < 0) {
@@ -78,8 +77,6 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
         PRINT_ERR("Failed to get hypothesis.\n");
         return -1;
     }
-	stopWatch(&p_thread->watch);
-	PRINT_INFO("Interpretation took %dmsec.\n", getWatchMSec(&p_thread->watch));
 	*p_outHyp = reserveString();
 	strcpy(*p_outHyp, hyp);
 	
@@ -102,12 +99,16 @@ static void* runThread(void * arg)
 		// start next iteration if received poison pill -> keepRunning should be false now
 		if(buffer == &poisonPill)
 			continue;
+		
+		//TODO time taking
+		startTimeTaking(&interpreterTime);
 		if(buffer->size != 0) {
 			interpreterThread->exitCode = interprete(interpreterThread, buffer, &hyp);
 			if(interpreterThread->exitCode == 0)
 				enqueueBlockingQueue(interpreterThread->hypQueue, (void*) hyp);
 		}
 		releaseAudioBuffer(buffer);
+		stopTimeTaking(&interpreterTime);
 	}
 	interpreterThread->running = 0;
 	PRINT_INFO("InterpreterThread terminated.\n");

@@ -1,6 +1,7 @@
 #include "CrashSimulationThread.h"
 #include "SimulationDrawer.h"
 #include "Utils.h"
+#include "TimeTaking.h"
 
 #define GUI_WIDTH 640
 #define GUI_HEIGHT 480
@@ -98,11 +99,14 @@ static void* runThread(void *arg)
 	}
 	
 	while(simulationThread->keepRunning) {
+		//TODO time taking
+		startTimeTaking(&simulationTime);
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
 			ret = stepSimulationThreadSafe(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
+		stopTimeTaking(&simulationTime);
 		
 		simulationThread->exitCode = sleepRate(&loopRate);
 		if(simulationThread->exitCode != 0) {

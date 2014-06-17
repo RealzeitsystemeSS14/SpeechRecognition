@@ -3,6 +3,7 @@
 #include "AudioBufferPool.h"
 #include "InputThread.h"
 #include "Utils.h"
+#include "TimeTaking.h"
 
 #define MAX_RETRIES 10
 #define BUFFER_SIZE 1024
@@ -18,27 +19,27 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	p_thread->record = 0;
 	p_thread->exitCode = 0;
 	
-	ret = pthread_mutex_init(&p_thread->startRecordMutex, NULL);
+	ret = pthread_mutex_init(&p_thread->recordMutex, NULL);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init mutex (%d).\n", ret);
 		return ret;
 	}
 	
-	ret = pthread_cond_init(&p_thread->startRecordCond, NULL);
+	ret = pthread_cond_init(&p_thread->recordCond, NULL);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init condition variable (%d).\n", ret);
 		return ret;
 	}
 	
-	ret = pthread_mutex_init(&p_thread->stopRecordMutex, NULL);
+	ret = pthread_barrier_init(&p_thread->startBarrier, NULL, 2);
 	if(ret != 0) {
-		PRINT_ERR("Failed to init mutex (%d).\n", ret);
+		PRINT_ERR("Failed to init barrier (%d).\n", ret);
 		return ret;
 	}
 	
-	ret = pthread_cond_init(&p_thread->stopRecordCond, NULL);
+	ret = pthread_barrier_init(&p_thread->stopBarrier, NULL, 2);
 	if(ret != 0) {
-		PRINT_ERR("Failed to init condition variable (%d).\n", ret);
+		PRINT_ERR("Failed to init barrier (%d).\n", ret);
 		return ret;
 	}
 	
@@ -88,25 +89,25 @@ int destroyInputThread(inputThread_t *p_thread)
 	cont_ad_close(p_thread->contAudioDevice);
     ad_close(p_thread->audioDevice);
 	
-	ret = pthread_cond_destroy(&p_thread->stopRecordCond);
+	ret = pthread_barrier_destroy(&p_thread->stopBarrier);
+	if(ret != 0) {
+		PRINT_ERR("Failed to destroy barrier (%d).\n", ret);
+		return ret;
+	}
+	
+	ret = pthread_barrier_destroy(&p_thread->startBarrier);
+	if(ret != 0) {
+		PRINT_ERR("Failed to destroy barrier (%d).\n", ret);
+		return ret;
+	}
+	
+	ret = pthread_cond_destroy(&p_thread->recordCond);
 	if(ret != 0) {
 		PRINT_ERR("Failed to destroy condition variable (%d).\n", ret);
 		return ret;
 	}
 	
-	ret = pthread_mutex_destroy(&p_thread->stopRecordMutex);
-	if(ret != 0) {
-		PRINT_ERR("Failed to destroy mutex (%d).\n", ret);
-		return ret;
-	}
-	
-	ret = pthread_cond_destroy(&p_thread->startRecordCond);
-	if(ret != 0) {
-		PRINT_ERR("Failed to destroy condition variable (%d).\n", ret);
-		return ret;
-	}
-	
-	ret = pthread_mutex_destroy(&p_thread->startRecordMutex);
+	ret = pthread_mutex_destroy(&p_thread->recordMutex);
 	if(ret != 0) {
 		PRINT_ERR("Failed to destroy mutex (%d).\n", ret);
 		return ret;
@@ -117,18 +118,14 @@ int destroyInputThread(inputThread_t *p_thread)
 
 static void signalStartRecording(inputThread_t *p_thread)
 {
-	pthread_mutex_lock(&p_thread->startRecordMutex);
+	pthread_barrier_wait(&p_thread->startBarrier);
 	PRINT_INFO("Recording input...\n");
-	pthread_cond_signal(&p_thread->startRecordCond);
-	pthread_mutex_unlock(&p_thread->startRecordMutex);
 }
 
 static void signalStopRecording(inputThread_t *p_thread)
 {
-	pthread_mutex_lock(&p_thread->stopRecordMutex);
+	pthread_barrier_wait(&p_thread->stopBarrier);
 	PRINT_INFO("Stopped recording.\n");
-	pthread_cond_signal(&p_thread->stopRecordCond);
-	pthread_mutex_unlock(&p_thread->stopRecordMutex);
 }
 
 static int record(inputThread_t *p_thread)
@@ -153,14 +150,10 @@ static int record(inputThread_t *p_thread)
         return ret;
 	}
 	
-	//TODO time taking
-	startWatch(&p_thread->watch);
 	//check if not silent
 	while (((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0) && p_thread->record) 
         usleep(1000);
 		
-	stopWatch(&p_thread->watch);
-	PRINT_INFO("First record took %dmsec.\n", getWatchMSec(&p_thread->watch));
 	//add read audio data to audioBuffer
 	addAudioBuffer(resultBuf, buf, ret);
 	
@@ -189,6 +182,7 @@ static int record(inputThread_t *p_thread)
     cont_ad_reset(p_thread->contAudioDevice);
 	
 	signalStopRecording(p_thread);
+	startTimeTaking(&globalTime);
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
 	
     return ret;
@@ -198,30 +192,44 @@ static void* runThread(void * arg)
 {
 	PRINT_INFO("InputThread started.\n");
 	inputThread_t *sphinxThread = (inputThread_t*) arg;
-	sphinxThread->exitCode = 0;
+	
+	pthread_mutex_lock(&sphinxThread->recordMutex);
 	sphinxThread->running = 1;
+	sphinxThread->exitCode = 0;
 	unsigned int retries = 0;
 	
 	while(sphinxThread->keepRunning) {
-		if(sphinxThread->record) {
-			sphinxThread->exitCode = record(sphinxThread);
-			
-			// if decoding failed retry MAX_RETRIES times
-			if(sphinxThread->exitCode != 0)
-				++retries;
-			else
-				retries = 0;
-			//terminate input thread, beacause max number of retries reached	
-			if(retries >= MAX_RETRIES) {
-				PRINT_ERR("Recording failed. Retries: %d. Aborting.\n", retries);
-				break;
-			}
-		} else {
-			usleep(1000);
+		
+		// wait until recording should start
+		while(!sphinxThread->record && sphinxThread->keepRunning)
+			pthread_cond_wait(&sphinxThread->recordCond, &sphinxThread->recordMutex);
+		
+		// stop if woken up because stopThread() was called
+		if(!sphinxThread->keepRunning)
+			break;
+		
+		//TODO time taking
+		startTimeTaking(&globalTime);
+		startTimeTaking(&inputTime);
+		sphinxThread->exitCode = record(sphinxThread);
+		
+		
+		// if decoding failed retry MAX_RETRIES times
+		if(sphinxThread->exitCode != 0)
+			++retries;
+		else
+			retries = 0;
+		//terminate input thread, beacause max number of retries reached	
+		if(retries >= MAX_RETRIES) {
+			PRINT_ERR("Recording failed. Retries: %d. Aborting.\n", retries);
+			break;
 		}
+		stopTimeTaking(&inputTime);
 	}
 	
 	sphinxThread->running = 0;
+	pthread_mutex_unlock(&sphinxThread->recordMutex);
+	
 	PRINT_INFO("InputThread terminated.\n");
 	pthread_exit(&sphinxThread->exitCode);
 }
@@ -245,6 +253,7 @@ int stopInputThread(inputThread_t *p_thread)
 {
 	int ret;
 	p_thread->keepRunning = 0;
+	pthread_cond_signal(&p_thread->recordCond);
 	return 0;
 }
 
@@ -262,11 +271,13 @@ int startRecording(inputThread_t *p_thread)
 		return -1;
 	}
 	
-	pthread_mutex_lock(&p_thread->startRecordMutex);
+	pthread_mutex_lock(&p_thread->recordMutex);
 	p_thread->record = 1;
-	// wait for recording to be started, else stop could be called too fast
-	pthread_cond_wait(&p_thread->startRecordCond, &p_thread->startRecordMutex);
-	pthread_mutex_unlock(&p_thread->startRecordMutex);
+	pthread_mutex_unlock(&p_thread->recordMutex);
+	// signal to start recording
+	pthread_cond_signal(&p_thread->recordCond);
+	// wait until recording has started
+	pthread_barrier_wait(&p_thread->startBarrier);
 	
 	return 0;
 }
@@ -278,11 +289,9 @@ int stopRecording(inputThread_t *p_thread)
 		return -1;
 	}
 	
-	pthread_mutex_lock(&p_thread->stopRecordMutex);
 	p_thread->record = 0;
-	// wait for recording to be stopped, else start could be called too fast
-	pthread_cond_wait(&p_thread->stopRecordCond, &p_thread->stopRecordMutex);
-	pthread_mutex_unlock(&p_thread->stopRecordMutex);
+	// wait until recording has stopped
+	pthread_barrier_wait(&p_thread->stopBarrier);
 	
 	return 0;
 }

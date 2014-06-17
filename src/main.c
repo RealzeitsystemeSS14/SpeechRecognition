@@ -5,6 +5,7 @@
 #include "ButtonThread.h"
 #include "CrashSimulationThread.h"
 #include "HypothesisMapper.h"
+#include "TimeTaking.h"
 #include "Utils.h"
 
 struct sigaction sa;
@@ -20,9 +21,8 @@ hypothesisMapper_t hypMapper;
 
 void sighandler(int sig)
 {
-	//TODO
-	stopInputThread(&inputThread);
-	stopInterpreterThread(&interpreterThread);
+	saveTimesToFile("times.txt");
+	exit(0);
 }
 
 void setSignalAction()
@@ -38,8 +38,11 @@ static int init()
 {
 	cmd_ln_t *config;
 	
+	setSignalAction();
+	
 	PRINT_INFO("Initializing allegro...");
 	allegro_init();
+	install_timer();
 	PRINT_INFO(" [Done]\n");
 	
 	err_set_logfp(fopen("/dev/null", "w"));

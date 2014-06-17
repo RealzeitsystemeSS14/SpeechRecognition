@@ -18,17 +18,15 @@ typedef struct {
 	ad_rec_t *audioDevice;
 	cont_ad_t *contAudioDevice;
 	
-	pthread_cond_t startRecordCond;
-	pthread_mutex_t startRecordMutex;
-	pthread_cond_t stopRecordCond;
-	pthread_mutex_t stopRecordMutex;
+	pthread_cond_t recordCond;
+	pthread_mutex_t recordMutex;
+	pthread_barrier_t startBarrier;
+	pthread_barrier_t stopBarrier;
 	
 	int exitCode;
 	volatile int running;
 	volatile int keepRunning;
 	volatile int record;
-	
-	stopWatch_t watch;
 } inputThread_t;
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue);

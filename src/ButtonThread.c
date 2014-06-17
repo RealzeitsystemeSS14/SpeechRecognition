@@ -5,7 +5,6 @@
 
 int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
 {
-	install_timer();
 	install_keyboard();
 	
 	p_thread->inputThread = p_inputThread;
@@ -58,7 +57,7 @@ static void* runThread(void * arg)
 			setSpeechState(WAITING_SPEECH_STATE);
 			displayTxt = 1;
 		} else {
-			usleep(10000);
+			usleep(50000);
 		}
 	}
 	

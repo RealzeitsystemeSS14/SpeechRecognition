@@ -3,6 +3,7 @@
 #include "HypothesisMapper.h"
 #include "StringPool.h"
 #include "Utils.h"
+#include "TimeTaking.h"
 
 #define STOP_CMD "stop"
 #define START_CMD "run"
@@ -29,7 +30,9 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		// if poison pill jump to next iteration -> keepRunning should now be false
 		if(hyp == poisonPill)
 			continue;
-			
+		
+		//TODO time taking
+		startTimeTaking(&mapperTime);
 		//change hypothesis to lower case, to make compare case insensitive
 		toLowerCase(hyp);
 		// check which command was called
@@ -44,6 +47,8 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
 		
 		releaseString(hyp);
+		stopTimeTaking(&mapperTime);
+		stopTimeTaking(&globalTime);
 	}
 }
 

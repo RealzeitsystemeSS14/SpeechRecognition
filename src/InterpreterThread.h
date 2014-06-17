@@ -22,7 +22,6 @@ typedef struct {
 	volatile int record;
 	volatile int keepRunning;
 	
-	stopWatch_t watch;
 } interpreterThread_t;
 
 int initInterpreterThread(interpreterThread_t *p_thread, blockingQueue_t *p_audioQueue, blockingQueue_t *p_hypQueue, cmd_ln_t *p_config);
