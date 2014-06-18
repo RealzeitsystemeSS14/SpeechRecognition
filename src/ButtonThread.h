@@ -21,7 +21,7 @@ int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread);
 int destroyButtonThread(buttonThread_t *p_thread);
 
 int startButtonThread(buttonThread_t *p_thread);
-int stopButtonThread(buttonThread_t *p_thread, int p_force);
+int stopButtonThread(buttonThread_t *p_thread);
 int joinButtonThread(buttonThread_t *p_thread);
 
 #endif

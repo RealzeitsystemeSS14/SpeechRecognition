@@ -43,18 +43,20 @@ int destroyCrashSimulationThread(crashSimulationThread_t *p_thread)
 {
 	int ret;
 	
+	if(p_thread->running) {
+		ret = stopCrashSimulationThread(p_thread);
+		if(ret != 0) {
+			PRINT_ERR("Failed to stop thread (%d).\n", ret);
+			return ret;
+		}
+		
+		joinCrashSimulationThread(p_thread);
+	}
+	
 	ret = destroySimulationDrawer();
 	if(ret != 0) {
 		PRINT_ERR("Failed to destroy SimulationDrawer (%d).\n", ret);
 		return ret;
-	}
-	
-	if(p_thread->running) {
-		ret = pthread_cancel(p_thread->thread);
-		if(ret != 0) {
-			PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-			return ret;
-		}
 	}
 	
 	ret = pthread_mutex_destroy(&p_thread->simulationMutex);
@@ -88,7 +90,7 @@ static void* runThread(void *arg)
 {
 	PRINT_INFO("SimulationThread started.\n");
 	rate_t loopRate;
-	int ret;
+	int ret = 0;
 	
 	crashSimulationThread_t *simulationThread = (crashSimulationThread_t*) arg;
 	simulationThread->running = 1;

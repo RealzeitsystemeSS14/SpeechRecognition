@@ -31,11 +31,13 @@ int destroyInterpreterThread(interpreterThread_t *p_thread)
 {
 	int ret = 0;
 	if(p_thread->running) {
-		ret = pthread_cancel(p_thread->thread);
+		ret = stopInterpreterThread(p_thread);
 		if(ret != 0) {
 			PRINT_ERR("Failed to cancel thread (%d).\n", ret);
 			return ret;
 		}
+		
+		joinInterpreterThread(p_thread);
 	}
 	
 	//free decoder
@@ -88,7 +90,6 @@ static void* runThread(void * arg)
 	PRINT_INFO("InterpreterThread started.\n");
 	audioBuffer_t *buffer;
 	char *hyp;
-	
 	
 	interpreterThread_t *interpreterThread = (interpreterThread_t*) arg;
 	interpreterThread->running = 1;

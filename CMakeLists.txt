@@ -14,7 +14,7 @@ set(MODELDIR "\"${MODELDIR}\"")
 add_definitions(-DMODELDIR=${MODELDIR})
 
 pkg_check_modules(sphinx REQUIRED pocketsphinx sphinxbase)
-find_package(Allegro)
+find_package(Allegro REQUIRED)
 
 if (sphinx_FOUND AND ALLEGRO_FOUND)
     include_directories(${sphinx_INCLUDE_DIRS} ${ALLEGRO_INCLUDE_DIR})

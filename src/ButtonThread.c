@@ -17,10 +17,14 @@ int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
 int destroyButtonThread(buttonThread_t *p_thread)
 {
 	int ret;
-	ret = stopButtonThread(p_thread, 1);
-	if(ret != 0) {
-		PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-		return ret;
+	if(p_thread->running) {
+		ret = stopButtonThread(p_thread);
+		if(ret != 0) {
+			PRINT_ERR("Failed to stop thread (%d).\n", ret);
+			return ret;
+		}
+		
+		joinButtonThread(p_thread);
 	}
 	
 	remove_keyboard();
@@ -85,20 +89,10 @@ int startButtonThread(buttonThread_t *p_thread)
 	return 0;
 }
 
-int stopButtonThread(buttonThread_t *p_thread, int p_force)
+int stopButtonThread(buttonThread_t *p_thread)
 {
 	int ret;
-	if(p_force) {
-		ret = pthread_cancel(p_thread->thread);
-		p_thread->keepRunning = 0;
-		if(ret != 0) {
-			PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-			return ret;
-		}
-		p_thread->running = 0;
-	} else {
-		p_thread->keepRunning = 0;
-	}
+	p_thread->running = 0;
 	
 	return 0;
 }

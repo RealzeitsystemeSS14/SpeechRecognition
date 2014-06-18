@@ -21,8 +21,7 @@ hypothesisMapper_t hypMapper;
 
 void sighandler(int sig)
 {
-	saveTimesToFile("times.txt");
-	exit(0);
+	stopHypothesisMapper(&hypMapper);
 }
 
 void setSignalAction()
@@ -32,6 +31,7 @@ void setSignalAction()
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGQUIT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
+	sigaction(SIGHUP, &sa, NULL);
 }
 
 static int init()
@@ -138,6 +138,12 @@ static int start()
 		
 	return 0;
 }
+static void stop() {
+	stopSimultaion(&simulationThread);
+	stopButtonThread(&buttonThread);
+	stopInterpreterThread(&interpreterThread);
+	stopInputThread(&inputThread);
+}
 
 static void join()
 {
@@ -172,9 +178,9 @@ int main(int argc, char** argv)
 	if(ret != 0)
 		return ret;
 	
-	
 	loopHypothesisMapper(&hypMapper);
 	
+	stop();
 	join();
 	destroy();
 	

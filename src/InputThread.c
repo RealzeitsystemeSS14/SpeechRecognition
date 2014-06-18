@@ -77,13 +77,16 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 
 int destroyInputThread(inputThread_t *p_thread)
 {
-	int ret = 0;
-	if(p_thread->running)
-		ret = pthread_cancel(p_thread->thread);
-	
-	if(ret != 0) {
-		PRINT_ERR("Failed to cancel thread (%d).\n", ret);
-		return ret;
+	int ret;
+	int result = 0;
+	if(p_thread->running) {
+		ret = stopInputThread(p_thread);
+		if(ret != 0) {
+			PRINT_ERR("Failed to stop thread (%d).\n", ret);
+			return ret;
+		}
+			
+		joinInputThread(p_thread);
 	}
 		
 	cont_ad_close(p_thread->contAudioDevice);
@@ -92,28 +95,28 @@ int destroyInputThread(inputThread_t *p_thread)
 	ret = pthread_barrier_destroy(&p_thread->stopBarrier);
 	if(ret != 0) {
 		PRINT_ERR("Failed to destroy barrier (%d).\n", ret);
-		return ret;
+		result = ret;
 	}
 	
 	ret = pthread_barrier_destroy(&p_thread->startBarrier);
 	if(ret != 0) {
 		PRINT_ERR("Failed to destroy barrier (%d).\n", ret);
-		return ret;
+		result = ret;
 	}
 	
 	ret = pthread_cond_destroy(&p_thread->recordCond);
 	if(ret != 0) {
 		PRINT_ERR("Failed to destroy condition variable (%d).\n", ret);
-		return ret;
+		result = ret;
 	}
 	
 	ret = pthread_mutex_destroy(&p_thread->recordMutex);
 	if(ret != 0) {
 		PRINT_ERR("Failed to destroy mutex (%d).\n", ret);
-		return ret;
+		result = ret;
 	}
 	
-	return 0;
+	return result;
 }
 
 static void signalStartRecording(inputThread_t *p_thread)
@@ -177,9 +180,6 @@ static int record(inputThread_t *p_thread)
         }
     }
     
-	while((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) > 0)
-		addAudioBuffer(resultBuf, buf, ret);
-	
     ad_stop_rec(p_thread->audioDevice);
     while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
@@ -255,7 +255,9 @@ int startInputThread(inputThread_t *p_thread)
 int stopInputThread(inputThread_t *p_thread)
 {
 	int ret;
+	pthread_mutex_lock(&p_thread->recordMutex);
 	p_thread->keepRunning = 0;
+	pthread_mutex_unlock(&p_thread->recordMutex);
 	pthread_cond_signal(&p_thread->recordCond);
 	return 0;
 }
