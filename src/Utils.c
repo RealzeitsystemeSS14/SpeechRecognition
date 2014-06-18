@@ -17,19 +17,19 @@ int stopWatch(stopWatch_t* p_watch)
 	if(ret != 0)
 		return ret;
 		
-	if (p_watch->tv_usec < end.tv_usec) {
-		int nsec = (end.tv_usec - p_watch->tv_usec) / USEC_PER_SEC + 1;
-		end.tv_usec -= USEC_PER_SEC * nsec;
-		end.tv_sec += nsec;
+	if (end.tv_usec < p_watch->tv_usec) {
+		int nsec = (p_watch->tv_usec - end.tv_usec) / USEC_PER_SEC + 1;
+		p_watch->tv_usec -= USEC_PER_SEC * nsec;
+		p_watch->tv_sec += nsec;
 	}
-	if ((p_watch->tv_usec - end.tv_usec) > USEC_PER_SEC) {
-		int nsec = (p_watch->tv_usec - end.tv_usec) / USEC_PER_SEC;
-		end.tv_usec += USEC_PER_SEC * nsec;
-		end.tv_sec -= nsec;
+	if ((end.tv_usec - p_watch->tv_usec) > USEC_PER_SEC) {
+		int nsec = (end.tv_usec - p_watch->tv_usec) / USEC_PER_SEC;
+		p_watch->tv_usec += USEC_PER_SEC * nsec;
+		p_watch->tv_sec -= nsec;
 	}
 	
-	p_watch->tv_sec = p_watch->tv_sec - end.tv_sec;
-	p_watch->tv_usec = p_watch->tv_usec - end.tv_usec;
+	p_watch->tv_sec = end.tv_sec - p_watch->tv_sec;
+	p_watch->tv_usec = end.tv_usec - p_watch->tv_usec;
 	
 	return 0;
 }
@@ -42,7 +42,7 @@ float getWatchSec(stopWatch_t* p_watch)
 }
 unsigned int getWatchMSec(stopWatch_t* p_watch)
 {
-	return ((unsigned int) p_watch->tv_sec) * MSEC_PER_SEC + p_watch->tv_usec / USEC_PER_MSEC;
+	return ((int) p_watch->tv_sec) * MSEC_PER_SEC + p_watch->tv_usec / USEC_PER_MSEC;
 }
 
 useconds_t getWatchUSec(stopWatch_t* p_watch)
