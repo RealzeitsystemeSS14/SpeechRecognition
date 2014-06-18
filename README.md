@@ -37,15 +37,7 @@ cat /proc/asound/cards
 cat /proc/asound/modules
 ```
 
-* für sphinx müssen die device files __/dev/dsp*__ vorhanden sein
-* autom. anlegen:
-
-```
-sudo su
-echo "snd_pcm_oss" >> /etc/modules
-exit
-```
-
+* falls dies nicht der Fall ist
 * in der Datei __/etc/modprobe.d/alsa-base.conf__ die Zeile mit  dem entsprechenden Eintrag suchen oder anlegen
 
 ```
@@ -53,22 +45,6 @@ exit
 options snd-usb-audio index=-2
 <<<<< in
 options snd-usb-audio index=0
-```
-
-* Sphinx hat unter Raspbian Probleme mit __/dev/dsp__ es sollte immer auf __/dev/dsp1__ zugegriffen werden
-* um das USB Gerät als default Audiogerät auszuwählen, muss in die Datei __/etc/asound.conf__ folgendes eingetragen werden
-
-```
-pcm.!default {
-    type plug
-    slave {
-        pcm "hw:1,0"
-    }
-}
-ctl.!default {
-    type hw
-    card 1
-}
 ```
 
 ---
@@ -166,30 +142,36 @@ Abhilfe hat hier die Installation von __libasound2-dev__ gebracht. Auch wenn die
 
 ---
 
-### Schlechte Spracherkennung
+### pocketsphinx
 
-Die Befehle wurden schlecht und nur sehr stark verzögert erkannt. Wird die Funktion ```ad_open()``` verwendet, ein Audio Device zu öffnen, wird das Default Gerät mit einer Abtastrate von 8000Hz verwendet. 
-Diese niedrige Abtastrate führt zu einer schlechten Qualität der Spracherkennung. Darum sollte die Funktion ```ad_open_sps(int sample_rate)``` verwendet werden, da hier die Abtastrate angegeben werden kann. Ein guter Wert
-stell __48000Hz__ dar.
+#### Schlechte Spracherkennung
 
 Die __Vergrößerung des AudioBuffers__, der zur Übertragung der Sprachdaten zwischen InputThread und InterpreterThread genutzt wird, auf __16k mal int16__ war notwendig, da der Buffer sonst zu kurz war, um die Befehle aufzunehmen.
-
-Aufgrund des kleinen Puffers sind in vorherigen Tests auch einige Befehle verloren gegangen. Pocketsphinx kann mit dem größeren Puffer Sprachdaten auch mit größerer Wahrscheinlichkeit korrekt interpretieren.
+Aufgrund des kleinen Puffers sind in vorherigen Tests auch einige Befehle verloren gegangen.
 
 Der Aufruf der Funktion ```ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 1);``` sollte als letztes Argument __true__ erhalten. Damit wird Pocketsphinx mitgeteilt, dass der übergebene Puffer __sämtliche Audiodaten__ für die Interpretation des Befehls beinhaltet und nichts weiter dazu kommt. Dadurch wird die Sicherheit und Effizienz der Interpretation erhöht.
 
 Der Pocketsphinxdecoder muss vor den Audiodevices initialisiert werden, damit die Konfigurationen, die nur (!) an den Decoder übergeben werden, auch für die Devices übernommen werden.
+Es handelt sich laut pocketsphinx Doku um eine globale Konfigurationseinheit.
 
-## Zu Testen
+Die Sprachaufnahme muss etwas länger gehalten werden, als eigentlich gesprochen wird. Durch das loslassen der Taste wird für pocketsphinx das Aufnehmen beendet. Aufgrund von Verzögerungen durch Treiber und das Betriebsystem
+sind aber noch nicht alle Audiodaten, die im Mikrofon eingegangen sind, auch in pocketsphinx angekommen. Daher muss pocketsphinx etwas länger aufnehmen als gesprochen wird, was sehr unintuitiv ist.
+Wird dieser Aspekt nicht beachtet, werden Befehle höchstwahrscheinlich gar nicht oder falsch interpretiert.
 
-```
-sudo apt-get install alsa-utils
-```
+####  Einstellungen
 
-### pocketsphinx Einstellungen
-
-Pocketsphinx reagiert registriert Input recht langsam (3,5 bis 6 Sekunden), daher müssen die Einstellungen für pocketsphinx geändert werden.
+Pocketsphinx registriert Input recht langsam (3,5 bis 6 Sekunden), daher müssen die Einstellungen für pocketsphinx geändert werden.
 Mit dem Tool ```pocketsphinx_batch``` lassen sich alle Argumente für pocketsphinx und deren Default-Werte ausgeben. Für gute Einstellmöglichkeiten, um pocketsphinx schneller zu machen, kann [hier](http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds) nachgeschaut werden.
+Bei richtiger Einstellung sind Aufnahme und Interpretation in unter 1 Sekunde machbar.
+
+Auf Desktoprechnern ist meist pulseaudio installiert. Dieses wird von pocketsphinx vorzugsweise verwendet. Jedoch erfolgt die Sprachaufnahme mit pulseaudio sehr viel langsamer als mit ALSA. Subrealzeit ist nur
+mit der Verwendung von ALSA möglich. Dazu muss pulseaudio __komplett__ deinstalliert werden.
+
+---
+
+### allegro
+
+Allegro legt ein eigenes Signalhandling während ```allegro_init()``` an. Daher müssen die eigenen Signale nach dem Aufruf dieser Funktionen gesetzt werden, sonst werden sie von allegro überschrieben.
 
 ## Links
 
