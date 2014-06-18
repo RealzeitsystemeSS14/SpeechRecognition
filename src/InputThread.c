@@ -177,9 +177,11 @@ static int record(inputThread_t *p_thread)
         }
     }
     
-    ad_stop_rec(p_thread->audioDevice);
-    while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0)
+	while((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) > 0)
 		addAudioBuffer(resultBuf, buf, ret);
+	
+    ad_stop_rec(p_thread->audioDevice);
+    while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
 	
 	signalStopRecording(p_thread);
