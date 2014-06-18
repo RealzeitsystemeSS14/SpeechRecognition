@@ -23,7 +23,7 @@ int stopCrashSimulationThread(crashSimulationThread_t *p_thread);
 int joinCrashSimulationThread(crashSimulationThread_t *p_thread);
 
 int startSimulation(crashSimulationThread_t *p_thread);
-int stopSimultaion(crashSimulationThread_t *p_thread);
+int stopSimulation(crashSimulationThread_t *p_thread);
 int resetSimulation(crashSimulationThread_t *p_thread);
 int brakeCar(crashSimulationThread_t *p_thread);
 

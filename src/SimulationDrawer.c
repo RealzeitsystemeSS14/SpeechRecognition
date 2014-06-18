@@ -63,6 +63,13 @@ int initSimulationDrawer(int p_width, int p_height)
 	return 0;
 }
 
+int destroySimulationDrawer()
+{
+	destroy_bitmap(dblbuffer);
+	
+	return 0;
+}
+
 int drawCar(unsigned int p_carPosition, unsigned int p_hlineOffset)
 {
 	unsigned int carWidth = PERCENT_OF(SCREEN_H, 3);
@@ -136,13 +143,6 @@ int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_st
 	
 	vsync();
     blit(dblbuffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
-	
-	return 0;
-}
-
-int destroySimulationDrawer()
-{
-	destroy_bitmap(dblbuffer);
 	
 	return 0;
 }

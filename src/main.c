@@ -10,18 +10,27 @@
 
 struct sigaction sa;
 
-blockingQueue_t audioQueue;
-blockingQueue_t hypQueue;
+static blockingQueue_t audioQueue;
+static blockingQueue_t hypQueue;
 
-inputThread_t inputThread;
-interpreterThread_t interpreterThread;
-buttonThread_t buttonThread;
-crashSimulationThread_t simulationThread;
-hypothesisMapper_t hypMapper;
+static inputThread_t inputThread;
+static interpreterThread_t interpreterThread;
+static buttonThread_t buttonThread;
+static crashSimulationThread_t simulationThread;
+static hypothesisMapper_t hypMapper;
+
+static volatile int initialized = 0;
+static cmd_ln_t *config;
 
 void sighandler(int sig)
 {
-	stopHypothesisMapper(&hypMapper);
+	PRINT_INFO("Shutting down...\n");
+	if(initialized)
+		stopHypothesisMapper(&hypMapper);
+	else {
+		PRINT_INFO("[Shutdown]\n");
+		exit(0);
+	}
 }
 
 void setSignalAction()
@@ -36,14 +45,12 @@ void setSignalAction()
 
 static int init()
 {
-	cmd_ln_t *config;
-	
-	setSignalAction();
-	
-	PRINT_INFO("Initializing allegro...");
+	PRINT_INFO("Initializing allegro...\n");
 	allegro_init();
 	install_timer();
-	PRINT_INFO(" [Done]\n");
+	
+	// have to be after allegro init because allegro initializes its own sighandler
+	setSignalAction();
 	
 	err_set_logfp(fopen("/dev/null", "w"));
 	PRINT_INFO("Getting Config...\n");
@@ -65,58 +72,43 @@ static int init()
         return -1;
     }
 	
-	PRINT_INFO("Init AudioBufferPool...");
-	fflush(stdout);
+	PRINT_INFO("Init AudioBufferPool...\n");
 	if(initAudioBufferPool() != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init StringPool...");
+	PRINT_INFO("Init StringPool...\n");
 	if(initStringPool() != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init HypQueue...");
-	fflush(stdout);
+	PRINT_INFO("Init HypQueue...\n");
 	if(initBlockingQueue(&hypQueue) != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init AudioQueue...");
-	fflush(stdout);
+	PRINT_INFO("Init AudioQueue...\n");
 	if(initBlockingQueue(&audioQueue) != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init InterpreterThread...");
-	fflush(stdout);
+	PRINT_INFO("Init InterpreterThread...\n");
 	if(initInterpreterThread(&interpreterThread, &audioQueue, &hypQueue, config) != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init InputThread...");
-	fflush(stdout);
+	PRINT_INFO("Init InputThread...\n");
 	if(initInputThread(&inputThread, &audioQueue) != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init ButtonThread...");
-	fflush(stdout);
+	PRINT_INFO("Init ButtonThread...\n");
 	if(initButtonThread(&buttonThread, &inputThread) != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init SimulationThread...");
-	fflush(stdout);
+	PRINT_INFO("Init SimulationThread...\n");
 	if(initCrashSimulationThread(&simulationThread) != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
 	
-	PRINT_INFO("Init HypothesisMapper...");
-	fflush(stdout);
+	PRINT_INFO("Init HypothesisMapper...\n");
 	if(initHypothesisMapper(&hypMapper, &hypQueue, &simulationThread) != 0)
 		return -1;
-	PRINT_INFO(" [Done]\n");
+		
+	PRINT_INFO("[Initialized]\n");
 	
 	return 0;
 }
@@ -138,8 +130,10 @@ static int start()
 		
 	return 0;
 }
-static void stop() {
-	stopSimultaion(&simulationThread);
+static void stop()
+{
+	PRINT_INFO("Stopping threads...\n");
+	stopCrashSimulationThread(&simulationThread);
 	stopButtonThread(&buttonThread);
 	stopInterpreterThread(&interpreterThread);
 	stopInputThread(&inputThread);
@@ -147,10 +141,19 @@ static void stop() {
 
 static void join()
 {
+	PRINT_INFO("Joining threads...\n");
 	joinCrashSimulationThread(&simulationThread);
 	joinButtonThread(&buttonThread);
 	joinInterpreterThread(&interpreterThread);
 	joinInputThread(&inputThread);
+	PRINT_INFO("[Joined threads]\n");
+}
+
+static void save() 
+{
+	PRINT_INFO("Saving results...\n");
+	saveTimesToFile("times.txt");
+	PRINT_INFO("[Saved]\n");
 }
 
 static void destroy()
@@ -163,7 +166,12 @@ static void destroy()
 	destroyBlockingQueue(&audioQueue, 0);
 	destroyBlockingQueue(&hypQueue, 0);
 	
+	cmd_ln_free_r(config);
+	
+	remove_timer();
 	allegro_exit();
+	
+	PRINT_INFO("[Destroyed]\n");
 }
 
 int main(int argc, char** argv)
@@ -178,11 +186,15 @@ int main(int argc, char** argv)
 	if(ret != 0)
 		return ret;
 	
+	initialized = 1;
 	loopHypothesisMapper(&hypMapper);
 	
 	stop();
 	join();
+	save();
 	destroy();
+	
+	PRINT_INFO("[Shutdown]\n");
 	
 	return 0;
 }

@@ -24,6 +24,9 @@ int initHypothesisMapper(hypothesisMapper_t *p_mapper, blockingQueue_t *p_hypQue
 int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 {
 	char *hyp;
+	
+	PRINT_INFO("HypothesisMapper started.\n");
+	
 	p_mapper->keepRunning = 1;
 	while(p_mapper->keepRunning) {
 		hyp = dequeueBlockingQueue(p_mapper->hypQueue);
@@ -50,6 +53,10 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		stopTimeTaking(&mapperTime);
 		stopTimeTaking(&globalTime);
 	}
+	
+	PRINT_INFO("HypothesisMapper terminated.\n");
+	
+	return 0;
 }
 
 int stopHypothesisMapper(hypothesisMapper_t *p_mapper)

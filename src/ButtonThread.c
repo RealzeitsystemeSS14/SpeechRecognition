@@ -92,7 +92,7 @@ int startButtonThread(buttonThread_t *p_thread)
 int stopButtonThread(buttonThread_t *p_thread)
 {
 	int ret;
-	p_thread->running = 0;
+	p_thread->keepRunning = 0;
 	
 	return 0;
 }

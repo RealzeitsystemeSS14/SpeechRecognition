@@ -156,7 +156,7 @@ int startSimulation(crashSimulationThread_t *p_thread)
 	return 0;
 }
 
-int stopSimultaion(crashSimulationThread_t *p_thread)
+int stopSimulation(crashSimulationThread_t *p_thread)
 {
 	p_thread->simulate = 0;
 	return 0;
@@ -164,7 +164,7 @@ int stopSimultaion(crashSimulationThread_t *p_thread)
 
 int resetSimulation(crashSimulationThread_t *p_thread)
 {
-	stopSimultaion(p_thread);
+	stopSimulation(p_thread);
 	pthread_mutex_lock(&p_thread->simulationMutex);
 	p_thread->simulation.car.position = 0;
 	p_thread->simulation.car.velocity = 0;
