@@ -44,7 +44,7 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	}
 	
 	// open audio device, used for recording audio data
-	p_thread->audioDevice = ad_open_sps(SAMPLE_RATE);
+	p_thread->audioDevice = ad_open();
     if (p_thread->audioDevice == NULL) {
 		PRINT_ERR("Failed to open audio device.\n");
         return -1;
@@ -178,7 +178,8 @@ static int record(inputThread_t *p_thread)
     }
     
     ad_stop_rec(p_thread->audioDevice);
-    while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0);
+    while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0)
+		addAudioBuffer(resultBuf, buf, ret);
     cont_ad_reset(p_thread->contAudioDevice);
 	
 	signalStopRecording(p_thread);
