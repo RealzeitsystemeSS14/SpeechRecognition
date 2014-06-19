@@ -2,7 +2,29 @@
 
 ## Installation
 
+### raspbian
+
+* zur Installation wird ein minimaler raspbian netinstaller verwendet
+
+```
+wget -O raspbian-ua-netinst-v1.0.2.img.xz https://github.com/debian-pi/raspbian-ua-netinst/releases/download/v1.0.2/raspbian-ua-netinst-v1.0.2.img.xz
+sudo su
+xzcat raspbian-ua-netinst-v1.0.2.img.xz > /dev/meinSDDevice
+exit
+```
+
+* nun muss die SD-Karte in das Raspberry eingelegt und das Raspberry gestartet werden
+__Anmerkung:__ Das Raspberry muss an das Internet angeschlossen sein.
+
 ### Vorbereitung
+
+* folgende Programme müssen installiert werden
+
+```
+sudo apt-get update 
+sudo apt-get install git vim cmake screen bison libasound2-dev liballegro4.2-dev
+sudo rpi-update
+```
 
 * für das Robotlabor folgende Anpassung in der Date __/etc/networ/interfaces__ vornehmen
 
@@ -15,14 +37,6 @@ iface eth0 inet static
         netmask 255.255.252.0
         gateway 141.37.28.254
         dns-nameservers 141.37.120.101
-```
-
-* diese Installations Schritte müssen noch ausgeführt werden
-
-```
-sudo apt-get update 
-sudo apt-get install git vim cmake screen
-sudo rpi-update
 ```
 
 ---
@@ -84,13 +98,7 @@ set-source-mute 1 0
 
 ### pocketsphinx
 
-* folgende Pakete müssen zuerst installiert werden
-
-```
-sudo apt-get install alsa-utils bison libasound2-dev
-```
-
-* nun muss __sphinx base__ installiert werden (--enable-fixed sorgt, dafür, dass Fetskommazahlen benutzt werden; verbessert die performance)
+* zuerst muss __sphinx base__ installiert werden (--enable-fixed sorgt, dafür, dass Fetskommazahlen benutzt werden; verbessert die performance)
 
 ```
 wget -O sphinxbase-0.8.tar.gz http://sourceforge.net/projects/cmusphinx/files/sphinxbase/0.8/sphinxbase-0.8.tar.gz/download
@@ -110,16 +118,6 @@ cd pocketsphinx-0.8
 ./configure
 make
 sudo make install
-```
-
----
-
-### allegro
-
-* allegro wird zur grafischen Darstellung der Simulation genutzt
-
-```
-sudo apt-get install liballegro4.2-dev
 ```
 
 ## Sprachmodell erzeugen
