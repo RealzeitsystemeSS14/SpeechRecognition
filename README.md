@@ -14,7 +14,18 @@ exit
 ```
 
 * nun muss die SD-Karte in das Raspberry eingelegt und das Raspberry gestartet werden
-__Anmerkung:__ Das Raspberry muss an das Internet angeschlossen sein.
+__Anmerkung:__ Das Raspberry muss an das Internet angeschlossen sein. Außerdem ist ein login über seriell per default ausgeschaltet.
+
+* seriellen Zugriff aktivieren in datei __/etc/inittab__ folgendes ändern
+
+```
+>>>>> diese zeile suchen
+#T0:23:respawn:/sbin/getty -L ttyS1 9600 vt100
+<<<<< so ändern
+T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100
+```
+
+
 
 ### Vorbereitung
 
