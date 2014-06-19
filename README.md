@@ -33,7 +33,7 @@ T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100
 
 ```
 sudo apt-get update 
-sudo apt-get install build-essential libasound2-dev xserver-xorg-core xinit lxde-core git vim cmake bison liballegro4.2-dev
+sudo apt-get install build-essential pkg-config libasound2-dev xserver-xorg-core xinit lxde-core git vim cmake bison liballegro4.2-dev
 sudo rpi-update
 ```
 
