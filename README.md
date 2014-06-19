@@ -211,3 +211,6 @@ Allegro legt ein eigenes Signalhandling während ```allegro_init()``` an. Daher 
 
 * http://cmusphinx.sourceforge.net/wiki/pocketsphinxhandhelds
 
+### xorg
+
+* http://www.raspberrypi.org/forums/viewtopic.php?p=344408
