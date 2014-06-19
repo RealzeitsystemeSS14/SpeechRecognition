@@ -37,6 +37,20 @@ sudo apt-get install build-essential libasound2-dev lxde-core git vim cmake biso
 sudo rpi-update
 ```
 
+* um Raspberry in die GUI zu starten, bei folgendem Kommando __startlxde__ auswählen
+
+```
+update-alternatives --config x-session-manager
+```
+
+* die Tastatur auf Deutsch umstellen
+
+```
+dpkg-reconfigure console-data
+dpkg-reconfigure keyboard-configuration
+service keyboard-setup restart
+```
+
 * für das Robotlabor folgende Anpassung in der Date __/etc/networ/interfaces__ vornehmen
 
 ```
