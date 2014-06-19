@@ -33,7 +33,7 @@ T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100
 
 ```
 sudo apt-get update 
-sudo apt-get install git vim cmake screen bison libasound2-dev liballegro4.2-dev
+sudo apt-get install build-essential libasound2-dev git vim cmake bison screen liballegro4.2-dev
 sudo rpi-update
 ```
 
