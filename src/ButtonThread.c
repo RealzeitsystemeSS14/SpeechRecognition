@@ -3,13 +3,14 @@
 #include "Utils.h"
 #include "SimulationDrawer.h"
 
-int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread)
+int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread, void (*p_closeCallback) (void))
 {
 	install_keyboard();
 	
 	p_thread->inputThread = p_inputThread;
 	p_thread->running = 0;
 	p_thread->exitCode = 0;
+	p_thread->closeCallback = p_closeCallback;
 	
 	return 0;
 }
@@ -60,7 +61,10 @@ static void* runThread(void * arg)
 			stopRecording(buttonThread->inputThread);
 			setSpeechState(WAITING_SPEECH_STATE);
 			displayTxt = 1;
-		} else {
+		} else if(key[KEY_ESC]) {
+			buttonThread->closeCallback();
+			break;
+		}else {
 			usleep(50000);
 		}
 	}

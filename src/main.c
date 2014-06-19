@@ -43,12 +43,17 @@ void setSignalAction()
 	sigaction(SIGHUP, &sa, NULL);
 }
 
+static void closeWindow()
+{
+	sighandler(0);
+}
+
 static int init()
 {
 	PRINT_INFO("Initializing allegro...\n");
 	allegro_init();
 	install_timer();
-	
+	set_close_button_callback(closeWindow);
 	// have to be after allegro init because allegro initializes its own sighandler
 	setSignalAction();
 	
@@ -97,7 +102,7 @@ static int init()
 		return -1;
 	
 	PRINT_INFO("Init ButtonThread...\n");
-	if(initButtonThread(&buttonThread, &inputThread) != 0)
+	if(initButtonThread(&buttonThread, &inputThread, closeWindow) != 0)
 		return -1;
 	
 	PRINT_INFO("Init SimulationThread...\n");

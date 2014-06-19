@@ -15,9 +15,10 @@ typedef struct {
 	int exitCode;
 	volatile int running;
 	volatile int keepRunning;
+	void (*closeCallback) (void);
 } buttonThread_t;
 
-int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread);
+int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread, void (*p_closeCallback) (void));
 int destroyButtonThread(buttonThread_t *p_thread);
 
 int startButtonThread(buttonThread_t *p_thread);
