@@ -9,6 +9,8 @@
 #define DEF_ACCELERATION 100
 #define DEF_BRAKE_ACCELERATION 100
 #define SIMULATION_RATE 30
+#define MIN_START_VEL (2 * SIMULATION_RATE * DEF_ACCELERATION)
+#define MAX_START_VEL (2 * SIMULATION_RATE * DEF_ACCELERATION)
 
 int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 {
@@ -20,7 +22,7 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 		return ret;
 	}
 	
-	ret = initSimulation(&p_thread->simulation, DEF_ACCELERATION, DEF_BRAKE_ACCELERATION, DEF_DISTANCE);
+	ret = initSimulation(&p_thread->simulation, DEF_ACCELERATION, DEF_BRAKE_ACCELERATION, DEF_DISTANCE, MIN_START_VEL, MAX_START_VEL);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init simulation (%d).\n", ret);
 		return ret;
@@ -147,7 +149,7 @@ int joinCrashSimulationThread(crashSimulationThread_t *p_thread)
 	return *((int*) retVal);
 }
 
-int startSimulation(crashSimulationThread_t *p_thread)
+int startCrashSimulation(crashSimulationThread_t *p_thread)
 {
 	pthread_mutex_lock(&p_thread->simulationMutex);
 	p_thread->simulation.car.brake = 0;
@@ -156,28 +158,31 @@ int startSimulation(crashSimulationThread_t *p_thread)
 	return 0;
 }
 
-int stopSimulation(crashSimulationThread_t *p_thread)
+int stopCrashSimulation(crashSimulationThread_t *p_thread)
 {
 	p_thread->simulate = 0;
 	return 0;
 }
 
-int resetSimulation(crashSimulationThread_t *p_thread)
+int resetCrashSimulation(crashSimulationThread_t *p_thread)
 {
-	stopSimulation(p_thread);
+	int ret;
+	stopCrashSimulation(p_thread);
 	pthread_mutex_lock(&p_thread->simulationMutex);
 	p_thread->simulation.car.position = 0;
 	p_thread->simulation.car.velocity = 0;
 	p_thread->simulation.car.brake = 0;
+	ret = randomSimulationStart(&p_thread->simulation);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
-	return 0;
+	return ret;
 }
 
 int brakeCar(crashSimulationThread_t *p_thread)
 {
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	p_thread->simulation.car.brake = 1;
+	if(simulationHasStarted(&p_thread->simulation))
+		p_thread->simulation.car.brake = 1;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
 	return 0;

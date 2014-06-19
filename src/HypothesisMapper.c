@@ -41,11 +41,11 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		// check which command was called
 		PRINT_INFO("Hypothesis received: %s.\n", hyp);
 		if(strcmp(hyp, START_CMD) == 0)
-			startSimulation(p_mapper->simulationThread);
+			startCrashSimulation(p_mapper->simulationThread);
 		else if(strcmp(hyp, STOP_CMD) == 0)
 			brakeCar(p_mapper->simulationThread);
 		else if(strcmp(hyp, RESET_CMD) == 0) {
-			resetSimulation(p_mapper->simulationThread);
+			resetCrashSimulation(p_mapper->simulationThread);
 		} else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
 		

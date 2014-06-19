@@ -22,7 +22,7 @@ static hypothesisMapper_t hypMapper;
 static volatile int initialized = 0;
 static cmd_ln_t *config;
 
-void sighandler(int sig)
+static void sighandler(int sig)
 {
 	PRINT_INFO("Shutting down...\n");
 	if(initialized)
@@ -33,7 +33,7 @@ void sighandler(int sig)
 	}
 }
 
-void setSignalAction()
+static void setSignalAction()
 {
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_handler = sighandler;
@@ -43,7 +43,7 @@ void setSignalAction()
 	sigaction(SIGHUP, &sa, NULL);
 }
 
-static void closeWindow()
+static void closeApplication()
 {
 	sighandler(0);
 }
@@ -53,7 +53,8 @@ static int init()
 	PRINT_INFO("Initializing allegro...\n");
 	allegro_init();
 	install_timer();
-	set_close_button_callback(closeWindow);
+	set_close_button_callback(closeApplication);
+	
 	// have to be after allegro init because allegro initializes its own sighandler
 	setSignalAction();
 	
@@ -102,7 +103,7 @@ static int init()
 		return -1;
 	
 	PRINT_INFO("Init ButtonThread...\n");
-	if(initButtonThread(&buttonThread, &inputThread, closeWindow) != 0)
+	if(initButtonThread(&buttonThread, &inputThread, closeApplication) != 0)
 		return -1;
 	
 	PRINT_INFO("Init SimulationThread...\n");

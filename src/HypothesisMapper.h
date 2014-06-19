@@ -1,3 +1,7 @@
+/* The HypothesisMapper handles hypothesises, which it gets from the hypQueue.
+ * Depending on the received hypothesis it calls different functions to react.
+ * All function return 0 on success. */
+ 
 #include "BlockingQueue.h"
 #include "CrashSimulationThread.h"
 
