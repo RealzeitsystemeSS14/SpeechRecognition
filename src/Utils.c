@@ -4,50 +4,68 @@
 #define MSEC_PER_SEC 1000
 #define USEC_PER_MSEC 1000
 
+static void getTimevalDiff(struct timeval *p_begin, struct timeval *p_end, struct timeval *p_result)
+{
+	// copy begin to result
+	*p_result = *p_begin;
+ 
+	if (p_end->tv_usec < p_result->tv_usec) {
+		int nsec = (p_result->tv_usec - p_end->tv_usec) / USEC_PER_SEC + 1;
+		p_result->tv_usec -= USEC_PER_SEC * nsec;
+		p_result->tv_sec += nsec;
+	}
+	if ((p_end->tv_usec - p_result->tv_usec) > USEC_PER_SEC) {
+		int nsec = (p_end->tv_usec - p_result->tv_usec) / USEC_PER_SEC;
+		p_result->tv_usec += USEC_PER_SEC * nsec;
+		p_result->tv_sec -= nsec;
+	}
+	
+	p_result->tv_sec = p_end->tv_sec - p_result->tv_sec;
+	p_result->tv_usec = p_end->tv_usec - p_result->tv_usec;
+}
+
 int startWatch(stopWatch_t* p_watch)
 {
-	return gettimeofday(p_watch, NULL);
+	return gettimeofday(&p_watch->lastStamp, NULL);
 }
 
 int stopWatch(stopWatch_t* p_watch)
 {
 	int ret;
-	struct timeval end;
+	struct timeval end, diff;
 	ret = gettimeofday(&end, NULL);
 	if(ret != 0)
 		return ret;
 		
-	if (end.tv_usec < p_watch->tv_usec) {
-		int nsec = (p_watch->tv_usec - end.tv_usec) / USEC_PER_SEC + 1;
-		p_watch->tv_usec -= USEC_PER_SEC * nsec;
-		p_watch->tv_sec += nsec;
-	}
-	if ((end.tv_usec - p_watch->tv_usec) > USEC_PER_SEC) {
-		int nsec = (end.tv_usec - p_watch->tv_usec) / USEC_PER_SEC;
-		p_watch->tv_usec += USEC_PER_SEC * nsec;
-		p_watch->tv_sec -= nsec;
-	}
+	getTimevalDiff(&p_watch->lastStamp, &end, &diff);
 	
-	p_watch->tv_sec = end.tv_sec - p_watch->tv_sec;
-	p_watch->tv_usec = end.tv_usec - p_watch->tv_usec;
+	// add diff to total measurement
+	p_watch->measured.tv_sec += diff.tv_sec;
+	p_watch->measured.tv_usec += diff.tv_usec;
 	
 	return 0;
 }
 
+void resetWatch(stopWatch_t* p_watch)
+{
+	p_watch->measured.tv_sec = 0;
+	p_watch->measured.tv_usec = 0;
+}
+
 float getWatchSec(stopWatch_t* p_watch)
 {
-	float result = p_watch->tv_sec;
-	result += ((float) (p_watch->tv_usec / USEC_PER_MSEC)) / MSEC_PER_SEC;
+	float result = p_watch->measured.tv_sec;
+	result += ((float) (p_watch->measured.tv_usec / USEC_PER_MSEC)) / MSEC_PER_SEC;
 	return result;
 }
 unsigned int getWatchMSec(stopWatch_t* p_watch)
 {
-	return ((int) p_watch->tv_sec) * MSEC_PER_SEC + p_watch->tv_usec / USEC_PER_MSEC;
+	return ((unsigned int) p_watch->measured.tv_sec) * MSEC_PER_SEC + p_watch->measured.tv_usec / USEC_PER_MSEC;
 }
 
-useconds_t getWatchUSec(stopWatch_t* p_watch)
+unsigned int getWatchUSec(stopWatch_t* p_watch)
 {
-	return ((useconds_t) p_watch->tv_sec) * USEC_PER_SEC + p_watch->tv_usec;
+	return ((unsigned int) ((unsigned int)p_watch->measured.tv_sec) * USEC_PER_SEC + p_watch->measured.tv_usec);
 }
 
 int initRate(rate_t* p_rate, unsigned int p_targetRate)
@@ -79,6 +97,7 @@ int sleepRate(rate_t* p_rate)
 			return ret;
 	}
 	
+	resetWatch(&p_rate->watch);
 	ret = startWatch(&p_rate->watch);
 	if(ret != 0)
 		return ret;

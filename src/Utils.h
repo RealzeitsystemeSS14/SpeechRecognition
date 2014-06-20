@@ -9,10 +9,15 @@
 #define PRINT_ERR(msg, ...) fprintf(stderr, "In %s (%d): " msg , basename(__FILE__), __LINE__, ##__VA_ARGS__)
 #define PRINT_INFO(msg, ...) printf(msg, ##__VA_ARGS__)
 
-typedef	struct timeval stopWatch_t;
+typedef	struct {
+	struct timeval lastStamp;
+	struct timeval measured;
+}  stopWatch_t;
 
 int startWatch(stopWatch_t* p_watch);
 int stopWatch(stopWatch_t* p_watch);
+void resetWatch(stopWatch_t* p_watch);
+
 float getWatchSec(stopWatch_t* p_watch);
 unsigned int getWatchMSec(stopWatch_t* p_watch);
 useconds_t getWatchUSec(stopWatch_t* p_watch);

@@ -58,6 +58,8 @@ static int init()
 	// have to be after allegro init because allegro initializes its own sighandler
 	setSignalAction();
 	
+	initTimeTaking();
+	
 	err_set_logfp(fopen("/dev/null", "w"));
 	PRINT_INFO("Getting Config...\n");
 
@@ -158,7 +160,7 @@ static void join()
 static void save() 
 {
 	PRINT_INFO("Saving results...\n");
-	saveTimesToFile("times.txt");
+	SAVE_TIMES_TO_FILE("times.txt");
 	PRINT_INFO("[Saved]\n");
 }
 

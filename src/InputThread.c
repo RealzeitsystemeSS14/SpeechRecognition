@@ -121,13 +121,17 @@ int destroyInputThread(inputThread_t *p_thread)
 
 static void signalStartRecording(inputThread_t *p_thread)
 {
+	HOLD_TIME_TAKING(inputExecutionTime);
 	pthread_barrier_wait(&p_thread->startBarrier);
+	RESUME_TIME_TAKING(inputExecutionTime);
 	PRINT_INFO("Recording input...\n");
 }
 
 static void signalStopRecording(inputThread_t *p_thread)
 {
+	HOLD_TIME_TAKING(inputExecutionTime);
 	pthread_barrier_wait(&p_thread->stopBarrier);
+	RESUME_TIME_TAKING(inputExecutionTime);
 	PRINT_INFO("Stopped recording.\n");
 }
 
@@ -136,8 +140,11 @@ static int record(inputThread_t *p_thread)
     int ret = 0;
     int16 buf[BUFFER_SIZE];
 	
+	// hold because reserving can block
+	HOLD_TIME_TAKING(inputExecutionTime);
 	//get audioBuffer for audioQueue
 	audioBuffer_t *resultBuf = reserveAudioBuffer();
+	RESUME_TIME_TAKING(inputExecutionTime);
 	
 	ret = initAudioBuffer(resultBuf);
 	if(ret != 0) {
@@ -185,8 +192,10 @@ static int record(inputThread_t *p_thread)
     cont_ad_reset(p_thread->contAudioDevice);
 	
 	signalStopRecording(p_thread);
-	startTimeTaking(&globalTime);
+	// enqueuing can also block
+	HOLD_TIME_TAKING(inputExecutionTime);
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
+	RESUME_TIME_TAKING(inputExecutionTime);
 	
     return ret;
 }
@@ -211,11 +220,8 @@ static void* runThread(void * arg)
 		if(!sphinxThread->keepRunning)
 			break;
 		
-		//TODO time taking
-		startTimeTaking(&globalTime);
-		startTimeTaking(&inputTime);
+		RESTART_TIME_TAKING(inputExecutionTime);
 		sphinxThread->exitCode = record(sphinxThread);
-		
 		
 		// if decoding failed retry MAX_RETRIES times
 		if(sphinxThread->exitCode != 0)
@@ -227,7 +233,7 @@ static void* runThread(void * arg)
 			PRINT_ERR("Recording failed. Retries: %d. Aborting.\n", retries);
 			break;
 		}
-		stopTimeTaking(&inputTime);
+		STOP_TIME_TAKING(inputExecutionTime);
 	}
 	
 	sphinxThread->running = 0;

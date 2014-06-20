@@ -72,15 +72,21 @@ int destroyCrashSimulationThread(crashSimulationThread_t *p_thread)
 
 static int stepSimulationThreadSafe(crashSimulationThread_t *p_thread)
 {
+	HOLD_TIME_TAKING(simulationExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
+	RESUME_TIME_TAKING(simulationExecutionTime);
+	RESTART_TIME_TAKING(simulationStepCSTime);
 	int ret = stepSimulation(&p_thread->simulation);
+	STOP_TIME_TAKING(simulationStepCSTime);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	return ret;
 }
 
 static void drawSimulationThreadSafe(crashSimulationThread_t *p_thread, int p_status)
 {
+	HOLD_TIME_TAKING(simulationExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
+	RESUME_TIME_TAKING(simulationExecutionTime);
 	int pos = p_thread->simulation.car.position;
 	int dist = p_thread->simulation.distance;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
@@ -103,20 +109,22 @@ static void* runThread(void *arg)
 	}
 	
 	while(simulationThread->keepRunning) {
-		//TODO time taking
-		startTimeTaking(&simulationTime);
+		// take time for simulation task
+		RESTART_TIME_TAKING(simulationExecutionTime);
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
 			ret = stepSimulationThreadSafe(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
-		stopTimeTaking(&simulationTime);
+		// stop watch before sleeping
+		STOP_TIME_TAKING(simulationExecutionTime);
 		
 		simulationThread->exitCode = sleepRate(&loopRate);
 		if(simulationThread->exitCode != 0) {
 			PRINT_ERR("Failed to sleep (%d).\n", simulationThread->exitCode);
 			simulationThread->keepRunning = 0;
 		}
+		
 	}
 	
 	simulationThread->running = 0;
@@ -151,7 +159,9 @@ int joinCrashSimulationThread(crashSimulationThread_t *p_thread)
 
 int startCrashSimulation(crashSimulationThread_t *p_thread)
 {
+	HOLD_TIME_TAKING(mapperExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
+	RESUME_TIME_TAKING(mapperExecutionTime);
 	p_thread->simulation.car.brake = 0;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	p_thread->simulate = 1;
@@ -168,7 +178,9 @@ int resetCrashSimulation(crashSimulationThread_t *p_thread)
 {
 	int ret;
 	stopCrashSimulation(p_thread);
+	HOLD_TIME_TAKING(mapperExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
+	RESUME_TIME_TAKING(mapperExecutionTime);
 	p_thread->simulation.car.position = 0;
 	p_thread->simulation.car.velocity = 0;
 	p_thread->simulation.car.brake = 0;
@@ -180,7 +192,9 @@ int resetCrashSimulation(crashSimulationThread_t *p_thread)
 
 int brakeCar(crashSimulationThread_t *p_thread)
 {
+	HOLD_TIME_TAKING(mapperExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
+	RESUME_TIME_TAKING(mapperExecutionTime);
 	if(simulationHasStarted(&p_thread->simulation))
 		p_thread->simulation.car.brake = 1;
 	pthread_mutex_unlock(&p_thread->simulationMutex);

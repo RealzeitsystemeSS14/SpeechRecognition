@@ -79,7 +79,9 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
         PRINT_ERR("Failed to get hypothesis.\n");
         return -1;
     }
+	HOLD_TIME_TAKING(interpreterExecutionTime);
 	*p_outHyp = reserveString();
+	RESUME_TIME_TAKING(interpreterExecutionTime);
 	strcpy(*p_outHyp, hyp);
 	
 	return 0;
@@ -100,16 +102,20 @@ static void* runThread(void * arg)
 		// start next iteration if received poison pill -> keepRunning should be false now
 		if(buffer == &poisonPill)
 			continue;
-		
-		//TODO time taking
-		startTimeTaking(&interpreterTime);
+		// take executiontime for task	
+		RESTART_TIME_TAKING(interpreterExecutionTime);
+
 		if(buffer->size != 0) {
 			interpreterThread->exitCode = interprete(interpreterThread, buffer, &hyp);
-			if(interpreterThread->exitCode == 0)
+			if(interpreterThread->exitCode == 0) {
+				// enqueue can also block
+				HOLD_TIME_TAKING(interpreterExecutionTime);
 				enqueueBlockingQueue(interpreterThread->hypQueue, (void*) hyp);
+				RESUME_TIME_TAKING(interpreterExecutionTime)
+			}
 		}
+		STOP_TIME_TAKING(interpreterExecutionTime);
 		releaseAudioBuffer(buffer);
-		stopTimeTaking(&interpreterTime);
 	}
 	interpreterThread->running = 0;
 	PRINT_INFO("InterpreterThread terminated.\n");

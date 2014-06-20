@@ -34,8 +34,8 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		if(hyp == poisonPill)
 			continue;
 		
-		//TODO time taking
-		startTimeTaking(&mapperTime);
+		// take execution time for task
+		RESTART_TIME_TAKING(mapperExecutionTime);
 		//change hypothesis to lower case, to make compare case insensitive
 		toLowerCase(hyp);
 		// check which command was called
@@ -48,10 +48,9 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 			resetCrashSimulation(p_mapper->simulationThread);
 		} else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
-		
+			
+		STOP_TIME_TAKING(mapperExecutionTime);
 		releaseString(hyp);
-		stopTimeTaking(&mapperTime);
-		stopTimeTaking(&globalTime);
 	}
 	
 	PRINT_INFO("HypothesisMapper terminated.\n");
