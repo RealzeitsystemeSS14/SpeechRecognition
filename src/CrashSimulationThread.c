@@ -10,8 +10,8 @@
 #define DEF_ACCELERATION 100
 #define DEF_BRAKE_ACCELERATION 100
 #define SIMULATION_RATE 30
-#define MIN_START_VEL (2 * SIMULATION_RATE * DEF_ACCELERATION)
-#define MAX_START_VEL (2 * SIMULATION_RATE * DEF_ACCELERATION)
+#define DEF_START_VELOCITY (SIMULATION_RATE * DEF_ACCELERATION)
+
 
 int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 {
@@ -30,7 +30,7 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 		return ret;
 	}
 	
-	ret = initSimulation(&p_thread->simulation, DEF_ACCELERATION, DEF_BRAKE_ACCELERATION, DEF_DISTANCE, MIN_START_VEL, MAX_START_VEL);
+	ret = initSimulation(&p_thread->simulation, DEF_ACCELERATION, DEF_BRAKE_ACCELERATION, DEF_DISTANCE, DEF_START_VELOCITY);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init simulation (%d).\n", ret);
 		return ret;
@@ -204,6 +204,7 @@ int resetCrashSimulation(crashSimulationThread_t *p_thread)
 	p_thread->simulation.car.position = 0;
 	p_thread->simulation.car.velocity = 0;
 	p_thread->simulation.car.brake = 0;
+	p_thread->simulation.car.velocity = p_thread->simulation.startVelocity;
 	ret = randomSimulationStart(&p_thread->simulation);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	

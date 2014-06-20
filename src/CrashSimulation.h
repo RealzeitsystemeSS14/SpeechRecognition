@@ -18,11 +18,10 @@ typedef struct {
 	unsigned int startStep;
 	unsigned int currentStep;
 	
-	unsigned int maxStartVel;
-	unsigned int minStartVel;
+	unsigned int startVelocity;
 } crashSimulation_t;
 
-int initSimulation(crashSimulation_t *p_simulation, unsigned int p_acceleration, unsigned int p_brakeAcceleration, unsigned int p_distance, unsigned int p_minStartVel, unsigned int p_maxStartVel);
+int initSimulation(crashSimulation_t *p_simulation, unsigned int p_acceleration, unsigned int p_brakeAcceleration, unsigned int p_distance, unsigned int p_startVelocity);
 
 /* stepSimulation() simulates one timestep.
  * If the car is accelerating, its velocity and position get increseased.

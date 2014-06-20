@@ -8,7 +8,7 @@
 #define CAR_BRAKES(sim) (sim->car.brake)
 #define MAX_START_STEP 60
 
-int initSimulation(crashSimulation_t *p_simulation, unsigned int p_acceleration, unsigned int p_brakeAcceleration, unsigned int p_distance, unsigned int p_minStartVel, unsigned int p_maxStartVel)
+int initSimulation(crashSimulation_t *p_simulation, unsigned int p_acceleration, unsigned int p_brakeAcceleration, unsigned int p_distance, unsigned int p_startVelocity)
 {		
 	srand(time(NULL));
 	p_simulation->car.acceleration = p_acceleration;
@@ -16,8 +16,7 @@ int initSimulation(crashSimulation_t *p_simulation, unsigned int p_acceleration,
 	p_simulation->car.brake = 0;
 	p_simulation->car.position = 0;
 	p_simulation->distance = p_distance;
-	p_simulation->minStartVel = p_minStartVel;
-	p_simulation->maxStartVel = p_maxStartVel;
+	p_simulation->startVelocity = p_startVelocity;
 	if(randomSimulationStart(p_simulation) != 0)
 		return -1;
 	
@@ -66,7 +65,6 @@ int randomSimulationStart(crashSimulation_t *p_simulation)
 {
 	p_simulation->currentStep = 0;
 	p_simulation->startStep = abs(rand()) % MAX_START_STEP;
-	p_simulation->car.velocity = (p_simulation->minStartVel + abs(rand())) % p_simulation->maxStartVel;
 	return 0;
 }
 
