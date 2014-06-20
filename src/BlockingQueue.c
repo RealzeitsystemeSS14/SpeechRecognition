@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include "BlockingQueue.h"
+#include "RTScheduling.h"
+#include "Utils.h"
 
 #define IS_EMPTY(queue) (queue->size == 0)
 #define IS_FULL(queue) (queue->size == queue->maxSize)
@@ -7,23 +9,38 @@
 int initBlockingQueue(blockingQueue_t *p_queue)
 {
 	int ret;
+	pthread_mutexattr_t attr;
 	p_queue->maxSize = BLOCKING_QUEUE_SIZE;
 	if(p_queue->elements == NULL) 
 		return -1;
 		
 	p_queue->size = 0;
 	
-	ret = pthread_mutex_init(&p_queue->mutex, NULL);
-	if(ret != 0)
+	ret = initRTMutexAttr(&attr);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init rt mutex attributes (%d).\n", ret);
 		return ret;
+	}
+	
+	ret = pthread_mutex_init(&p_queue->mutex, &attr);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init mutex (%d).\n", ret);
+		return ret;
+	}
 		
 	ret = pthread_cond_init(&p_queue->popCondition, NULL);
-	if(ret != 0)
+	if(ret != 0) {
+		PRINT_ERR("Failed to init condition variable (%d).\n", ret);
 		return ret;
+	}
 	
 	ret = pthread_cond_init(&p_queue->pushCondition, NULL);
-	if(ret != 0)
+	if(ret != 0) {
+		PRINT_ERR("Failed to init condition variable (%d).\n", ret);
 		return ret;
+	}
+		
+	pthread_mutexattr_destroy(&attr);
 	
 	return 0;
 }

@@ -11,7 +11,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/modules")
 execute_process(COMMAND pkg-config --variable=modeldir pocketsphinx OUTPUT_VARIABLE MODELDIR)
 string(REGEX REPLACE "(\r?\n)+$" "" MODELDIR "${MODELDIR}")
 set(MODELDIR "\"${MODELDIR}\"")
-add_definitions(-DMODELDIR=${MODELDIR} -DTAKE_TIME)
+add_definitions(-DMODELDIR=${MODELDIR} -DTAKE_TIME -D_GNU_SOURCE)
 
 pkg_check_modules(sphinx REQUIRED pocketsphinx sphinxbase)
 find_package(Allegro REQUIRED)

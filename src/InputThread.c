@@ -4,14 +4,15 @@
 #include "InputThread.h"
 #include "Utils.h"
 #include "TimeTaking.h"
+#include "RTScheduling.h"
 
 #define MAX_RETRIES 10
-#define BUFFER_SIZE 1024
 #define SAMPLE_RATE 48000
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 {
 	int ret;
+	pthread_mutexattr_t attr;
 	
 	p_thread->audioQueue = p_audioQueue;
 	p_thread->running = 0;
@@ -19,7 +20,13 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	p_thread->record = 0;
 	p_thread->exitCode = 0;
 	
-	ret = pthread_mutex_init(&p_thread->recordMutex, NULL);
+	ret = initRTMutexAttr(&attr);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init rt mutex attributes (%d).\n", ret);
+		return ret;
+	}
+	
+	ret = pthread_mutex_init(&p_thread->recordMutex, &attr);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init mutex (%d).\n", ret);
 		return ret;
@@ -71,6 +78,7 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	}
 
     ad_stop_rec(p_thread->audioDevice);
+	pthread_mutexattr_destroy(&attr);
 		
 	return 0;
 }
@@ -138,7 +146,6 @@ static void signalStopRecording(inputThread_t *p_thread)
 static int record(inputThread_t *p_thread)
 {
     int ret = 0;
-    int16 buf[BUFFER_SIZE];
 	
 	// hold because reserving can block
 	HOLD_TIME_TAKING(inputExecutionTime);
@@ -161,16 +168,16 @@ static int record(inputThread_t *p_thread)
 	}
 	
 	//check if not silent
-	while (((ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE)) == 0) && p_thread->record) 
+	while (((ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE)) == 0) && p_thread->record) 
         usleep(1000);
 		
 	//add read audio data to audioBuffer
-	addAudioBuffer(resultBuf, buf, ret);
+	addAudioBuffer(resultBuf, p_thread->inputBuffer, ret);
 	
 	PRINT_INFO("Received audio.\n");
 	
     while(p_thread->record) {
-        ret = cont_ad_read(p_thread->contAudioDevice, buf, BUFFER_SIZE);
+        ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE);
 
         if (ret < 0) {
 			//something went wrong
@@ -178,7 +185,7 @@ static int record(inputThread_t *p_thread)
             break;
         } else if(ret > 0) {
             // valid speech data read
-            addAudioBuffer(resultBuf, buf, ret);
+            addAudioBuffer(resultBuf, p_thread->inputBuffer, ret);
 			if(isFullAudioBuffer(resultBuf))
 				PRINT_INFO("AudioBuffer is full!\n");
         } else {
@@ -188,7 +195,7 @@ static int record(inputThread_t *p_thread)
     }
     
     ad_stop_rec(p_thread->audioDevice);
-    while (ad_read(p_thread->audioDevice, buf, BUFFER_SIZE) >= 0);
+    while (ad_read(p_thread->audioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
 	
 	signalStopRecording(p_thread);
@@ -246,14 +253,23 @@ static void* runThread(void * arg)
 int startInputThread(inputThread_t *p_thread)
 {
 	int ret;
+	pthread_attr_t attr;
+	
+	ret = initRTThreadAttr(&attr, INPUT_STACKSIZE, INPUT_PRIORITY);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init rt pthread attributes (%d).\n", ret);
+		return ret;
+	}
 	
 	p_thread->record = 0;
 	p_thread->keepRunning = 1;
-	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
+	ret = pthread_create(&p_thread->thread, &attr, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create Thread (%d).\n", ret);
 		return ret;
 	}
+	
+	pthread_attr_destroy(&attr);
 	
 	return 0;
 }

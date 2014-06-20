@@ -2,6 +2,7 @@
 #include "ButtonThread.h"
 #include "Utils.h"
 #include "SimulationDrawer.h"
+#include "RTScheduling.h"
 
 int initButtonThread(buttonThread_t *p_thread, inputThread_t *p_inputThread, void (*p_closeCallback) (void))
 {
@@ -77,18 +78,27 @@ static void* runThread(void * arg)
 int startButtonThread(buttonThread_t *p_thread)
 {
 	int ret;
+	pthread_attr_t attr;
 	
 	if(p_thread->running) {
 		PRINT_ERR("Thread is already running.\n");
 		return -1;
 	}
 	
+	ret = initRTThreadAttr(&attr, BUTTON_STACKSIZE, BUTTON_PRIORITY);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init rt thread attributes (%d).\n", ret);
+		return ret;
+	}
+	
 	p_thread->keepRunning = 1;
-	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
+	ret = pthread_create(&p_thread->thread, &attr, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create thread (%d).\n", ret);
 		return ret;
 	}
+	
+	pthread_attr_destroy(&attr);
 	
 	return 0;
 }

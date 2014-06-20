@@ -7,6 +7,7 @@
 #include "HypothesisMapper.h"
 #include "TimeTaking.h"
 #include "Utils.h"
+#include "RTScheduling.h"
 
 struct sigaction sa;
 
@@ -50,6 +51,10 @@ static void closeApplication()
 
 static int init()
 {
+	PRINT_INFO("Initializing scheduling policy...\n");
+	if(initRTCurrentThread(MAPPER_PRIORITY) != 0)
+		return -1;
+	
 	PRINT_INFO("Initializing allegro...\n");
 	allegro_init();
 	install_timer();
@@ -76,7 +81,7 @@ static int init()
                          NULL);
 
     if (config == NULL) {
-        PRINT_ERR("Error getting cmd config.\n");
+        PRINT_ERR("Failed to get cmd config.\n");
         return -1;
     }
 	

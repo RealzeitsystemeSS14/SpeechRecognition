@@ -14,10 +14,17 @@ static pthread_cond_t condition;
 int initStringPool()
 {
 	int i, ret;
+	pthread_mutexattr_t attr;
 	
 	inUseCount = 0;
 	
-	ret = pthread_mutex_init(&mutex, NULL);
+	ret = initRTMutexAttr(&attr);
+	if(ret != 0) {
+		PRINT_ERR("Failed to int rt mutex attributes (%d).\n", ret);
+		return ret;
+	}
+	
+	ret = pthread_mutex_init(&mutex, &attr);
 	if(ret != 0) {
 		PRINT_ERR("Failed to int mutex (%d).\n", ret);
 		return ret;
@@ -31,6 +38,8 @@ int initStringPool()
 	
 	for(i = 0; i < POOL_SIZE; ++i)
 		inUse[i] = 0;
+	
+	pthread_mutexattr_destroy(&attr);
 	
 	return 0;
 }

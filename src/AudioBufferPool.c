@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include "AudioBufferPool.h"
+#include "RTScheduling.h"
 #include "Utils.h"
 
 #define POOL_SIZE 5
@@ -14,10 +15,17 @@ static pthread_cond_t condition;
 int initAudioBufferPool()
 {
 	int i, ret;
+	pthread_mutexattr_t attr;
 	
 	inUseCount = 0;
 	
-	ret = pthread_mutex_init(&mutex, NULL);
+	ret = initRTMutexAttr(&attr);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init RT mutex attributes (%d).\n", ret);
+		return ret;
+	}
+	
+	ret = pthread_mutex_init(&mutex, &attr);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init mutex (%d).\n", ret);
 		return ret;
@@ -37,6 +45,8 @@ int initAudioBufferPool()
 			return ret;
 		}
 	}
+	
+	pthread_mutexattr_destroy(&attr);
 	
 	return 0;
 }

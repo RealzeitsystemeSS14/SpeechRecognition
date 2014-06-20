@@ -4,6 +4,7 @@
 #include "StringPool.h"
 #include "Utils.h"
 #include "TimeTaking.h"
+#include "RTScheduling.h"
 
 static audioBuffer_t poisonPill;
 
@@ -62,7 +63,7 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 		PRINT_ERR("Failed to start utterance (%d).\n", ret);
 		return ret;
 	}
-        
+    
 	//interprete the audio data
 	ret = ps_process_raw(p_thread->psDecoder, buffer->buffer, buffer->size, 0, 1);
     if (ret < 0) {
@@ -70,7 +71,7 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
 		ps_end_utt(p_thread->psDecoder);
         return ret;
 	}
-		
+	
 	ps_end_utt(p_thread->psDecoder);
 	
 	//get result of interpretation
@@ -126,13 +127,22 @@ static void* runThread(void * arg)
 int startInterpreterThread(interpreterThread_t *p_thread)
 {
 	int ret;
+	pthread_attr_t attr;
+	
+	ret = initRTThreadAttr(&attr, INTERPRETER_STACKSIZE, INTERPRETER_PRIORITY);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init rt pthread attributes (%d).\n", ret);
+		return ret;
+	}
 	
 	p_thread->keepRunning = 1;
-	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
+	ret = pthread_create(&p_thread->thread, &attr, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create thread (%d).\n", ret);
 		return ret;
 	}
+	
+	pthread_attr_destroy(&attr);
 	
 	return 0;
 }

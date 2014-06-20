@@ -12,6 +12,8 @@
 #include "BlockingQueue.h"
 #include "Utils.h"
 
+#define INPUT_BUFFER_SIZE 1024
+
 typedef struct {
 	pthread_t thread;
 	blockingQueue_t *audioQueue;
@@ -22,6 +24,8 @@ typedef struct {
 	pthread_mutex_t recordMutex;
 	pthread_barrier_t startBarrier;
 	pthread_barrier_t stopBarrier;
+	
+	int16 inputBuffer[INPUT_BUFFER_SIZE];
 	
 	int exitCode;
 	volatile int running;

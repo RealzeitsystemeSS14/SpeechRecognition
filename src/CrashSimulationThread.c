@@ -2,6 +2,7 @@
 #include "SimulationDrawer.h"
 #include "Utils.h"
 #include "TimeTaking.h"
+#include "RTScheduling.h"
 
 #define GUI_WIDTH 640
 #define GUI_HEIGHT 480
@@ -15,8 +16,15 @@
 int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 {
 	int ret;
+	pthread_mutexattr_t attr;
 	
-	ret = pthread_mutex_init(&p_thread->simulationMutex, NULL);
+	ret = initRTMutexAttr(&attr);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init rt mutex attributes (%d).\n", ret);
+		return ret;
+	}
+	
+	ret = pthread_mutex_init(&p_thread->simulationMutex, &attr);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init mutex (%d).\n", ret);
 		return ret;
@@ -37,6 +45,8 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 		PRINT_ERR("Failed to init SimulationDrawer (%d).\n", ret);
 		return ret;
 	}
+	
+	pthread_mutexattr_destroy(&attr);
 	
 	return 0;
 }
@@ -135,10 +145,20 @@ static void* runThread(void *arg)
 int startCrashSimulationThread(crashSimulationThread_t *p_thread)
 {
 	int ret;
+	pthread_attr_t attr;
+	
+	ret = initRTThreadAttr(&attr, SIMULATION_STACKSIZE, SIMULATION_PRIORITY);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init rt thread attributes (%d).\n", ret);
+		return ret;
+	}
+	
 	p_thread->keepRunning = 1;
 	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
-	if(ret != 0)
+	if(ret != 0) {
+		PRINT_ERR("Failed to create simulation thread (%d).\n", ret);
 		return ret;
+	}
 		
 	return 0;
 }
