@@ -2,7 +2,6 @@
 #include <allegro.h>
 #include "InputThread.h"
 #include "InterpreterThread.h"
-#include "ButtonThread.h"
 #include "CrashSimulationThread.h"
 #include "HypothesisMapper.h"
 #include "TimeTaking.h"
@@ -16,7 +15,6 @@ static blockingQueue_t hypQueue;
 
 static inputThread_t inputThread;
 static interpreterThread_t interpreterThread;
-static buttonThread_t buttonThread;
 static crashSimulationThread_t simulationThread;
 static hypothesisMapper_t hypMapper;
 
@@ -109,10 +107,6 @@ static int init()
 	if(initInputThread(&inputThread, &audioQueue) != 0)
 		return -1;
 	
-	PRINT_INFO("Init ButtonThread...\n");
-	if(initButtonThread(&buttonThread, &inputThread, closeApplication) != 0)
-		return -1;
-	
 	PRINT_INFO("Init SimulationThread...\n");
 	if(initCrashSimulationThread(&simulationThread) != 0)
 		return -1;
@@ -134,9 +128,6 @@ static int start()
 	PRINT_INFO("Start InterpreterThread...\n");
 	if(startInterpreterThread(&interpreterThread) != 0)
 		return -21;
-	PRINT_INFO("Start ButtonThread...\n");
-	if(startButtonThread(&buttonThread) != 0)
-		return -22;
 	PRINT_INFO("Start SimulationThread...\n");
 	if(startCrashSimulationThread(&simulationThread) != 0)
 		return -23;
@@ -147,7 +138,6 @@ static void stop()
 {
 	PRINT_INFO("Stopping threads...\n");
 	stopCrashSimulationThread(&simulationThread);
-	stopButtonThread(&buttonThread);
 	stopInterpreterThread(&interpreterThread);
 	stopInputThread(&inputThread);
 }
@@ -156,7 +146,6 @@ static void join()
 {
 	PRINT_INFO("Joining threads...\n");
 	joinCrashSimulationThread(&simulationThread);
-	joinButtonThread(&buttonThread);
 	joinInterpreterThread(&interpreterThread);
 	joinInputThread(&inputThread);
 	PRINT_INFO("[Joined threads]\n");
@@ -172,7 +161,6 @@ static void save()
 static void destroy()
 {
 	destroyCrashSimulationThread(&simulationThread);
-	destroyButtonThread(&buttonThread);
 	destroyInterpreterThread(&interpreterThread);
 	destroyInputThread(&inputThread);
 	
