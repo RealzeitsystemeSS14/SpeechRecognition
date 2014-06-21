@@ -1,49 +1,52 @@
 #include "TimeTaking.h"
 
-struct timeElement inputExecutionTime;
-struct timeElement interpreterExecutionTime;
-struct timeElement simulationExecutionTime;
-struct timeElement simulationStepCSTime;
-struct timeElement mapperExecutionTime;
+#define TIME_TAKING_NAME "Sim"
+static stopWatch_t watch;
+static unsigned int max;
 
-int initTimeTaking()
+void initTimeTaking()
 {
-	inputExecutionTime.max = 0;
-	interpreterExecutionTime.max = 0;
-	simulationExecutionTime.max = 0;
-	simulationStepCSTime.max = 0;
-	mapperExecutionTime.max = 0;
-	
-	return 0;
+	max = 0;
 }
 
-int stopTimeTaking(struct timeElement *p_element)
+void restartTimeTaking()
 {
-	int ret = stopWatch(&p_element->watch);
-	if(ret != 0)
-		return ret;
-	unsigned int tmp = getWatchMSec(&p_element->watch);
-	if( tmp > p_element->max)
-		p_element->max = tmp;
-	
-	return 0;
+	resetWatch(&watch);
+	if(startWatch(&watch) != 0)
+		PRINT_ERR("Failed to start watch for time taking.\n");
 }
 
-int saveTimesToFile(char *p_file)
+void holdTimeTaking()
+{
+	if(stopWatch(&watch) != 0)
+		PRINT_ERR("Failed to stop watch for time taking.\n");
+}
+void resumeTimeTaking()
+{
+	if(startWatch(&watch) != 0)
+		PRINT_ERR("Failed to start watch for time taking.\n");
+}
+
+void stopTimeTaking()
+{
+	if(stopWatch(&watch) != 0)
+		PRINT_ERR("Failed to stop watch for time taking.\n");
+	unsigned int tmp = getWatchMSec(&watch);
+	if(tmp > max)
+		max = tmp;
+}
+
+void saveTimeToFile(char *p_file)
 {
 	FILE *f = fopen(p_file, "w");
 	if (f == NULL) {
 		PRINT_ERR("Unable to open file: %s.\n", p_file);
-		return -1;
+		return;
 	}
 	
-	fprintf(f, "Input: %dms\n",inputExecutionTime.max);
-	fprintf(f, "Interpreter: %dms\n",interpreterExecutionTime.max);
-	fprintf(f, "Simulation: %dms\n",simulationExecutionTime.max);
-	fprintf(f, "Simulation Step: %dms\n",simulationStepCSTime.max);
-	fprintf(f, "Mapper: %dms\n", mapperExecutionTime.max);
+	fprintf(f, "### Time taking results\n");
+	fprintf(f, "%s: %dms\n",TIME_TAKING_NAME, max);
 	
 	fclose(f);
 	
-	return 0;
 }

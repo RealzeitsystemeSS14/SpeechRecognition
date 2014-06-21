@@ -12,7 +12,6 @@
 #define BOX_BORDER_WIDTH 2
 
 static BITMAP *dblbuffer;
-static volatile int speechState;
 
 int initSimulationDrawer(int p_width, int p_height)
 {
@@ -23,8 +22,6 @@ int initSimulationDrawer(int p_width, int p_height)
 		PRINT_ERR("Couldn't set gfx mode: %s\n", allegro_error);
 		return -1;
 	}
-	
-	speechState = WAITING_SPEECH_STATE;
 	
 	// create colours
 	colour.r = 255;
@@ -92,17 +89,15 @@ int drawCar(unsigned int p_carPosition, unsigned int p_hlineOffset)
 	return 0;
 }
 
-int drawSpeechState() {
+int drawSpeechState(int p_listening) {
 	char *text;
 	int color;
-	if(speechState == WAITING_SPEECH_STATE) {
-		color = RED;
-		text = "Waiting";
-	} else if(speechState == LISTENING_SPEECH_STATE) {
+	if(p_listening) {
 		color = GREEN;
 		text = "Listening";
 	} else {
-		return -1;
+		color = RED;
+		text = "Waiting";
 	}
 	
 	unsigned int boxLeftOffset = PERCENT_OF(SCREEN_W, 1);
@@ -117,7 +112,7 @@ int drawSpeechState() {
 	return 0;
 }
 
-int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_status)
+int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_status, int p_listening)
 {
 	unsigned int hlineOffset = PERCENT_OF(SCREEN_W, 5);
 	unsigned int hlineLength = SCREEN_W - hlineOffset * 2;
@@ -138,14 +133,9 @@ int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_st
 	else if(p_status == 1)
 		textout_centre_ex(dblbuffer, font, "Car stopped!", SCREEN_W / 2, 0, GREEN, -1);
 	
-	drawSpeechState();
+	drawSpeechState(p_listening);
 	
     blit(dblbuffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
 	
 	return 0;
-}
-
-int setSpeechState(int p_speechState)
-{
-	speechState = p_speechState;
 }

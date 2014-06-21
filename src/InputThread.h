@@ -25,6 +25,7 @@ typedef struct {
 	int exitCode;
 	volatile int running;
 	volatile int keepRunning;
+	volatile int listening;
 } inputThread_t;
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue);

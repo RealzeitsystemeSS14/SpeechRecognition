@@ -19,6 +19,7 @@ int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue)
 	p_thread->running = 0;
 	p_thread->keepRunning = 0;
 	p_thread->exitCode = 0;
+	p_thread->listening = 0;
 	
 	// open audio device, used for recording audio data
 	p_thread->audioDevice = ad_open();
@@ -84,11 +85,8 @@ static int record(inputThread_t *p_thread)
 {
     int ret = 0;
 	int32 ts;
-	// hold because reserving can block
-	HOLD_TIME_TAKING(inputExecutionTime);
 	//get audioBuffer for audioQueue
 	audioBuffer_t *resultBuf = reserveAudioBuffer();
-	RESUME_TIME_TAKING(inputExecutionTime);
 	
 	ret = initAudioBuffer(resultBuf);
 	if(ret != 0) {
@@ -97,6 +95,7 @@ static int record(inputThread_t *p_thread)
 	}
 	
 	//start recording from audiodevice
+	p_thread->listening = 1;
 	ret = ad_start_rec(p_thread->audioDevice);
     if (ret < 0) {
 		PRINT_ERR("Could not start recording audio (%d).\n", ret);
@@ -136,13 +135,12 @@ static int record(inputThread_t *p_thread)
     }
     
     ad_stop_rec(p_thread->audioDevice);
+	p_thread->listening = 0;
     while (ad_read(p_thread->audioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
 	
 	// enqueuing can also block
-	HOLD_TIME_TAKING(inputExecutionTime);
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
-	RESUME_TIME_TAKING(inputExecutionTime);
 	
     return ret;
 }
@@ -158,7 +156,6 @@ static void* runThread(void * arg)
 	
 	while(sphinxThread->keepRunning) {
 		
-		RESTART_TIME_TAKING(inputExecutionTime);
 		sphinxThread->exitCode = record(sphinxThread);
 		
 		// if decoding failed retry MAX_RETRIES times
@@ -171,7 +168,6 @@ static void* runThread(void * arg)
 			PRINT_ERR("Recording failed. Retries: %d. Aborting.\n", retries);
 			break;
 		}
-		STOP_TIME_TAKING(inputExecutionTime);
 	}
 	
 	sphinxThread->running = 0;

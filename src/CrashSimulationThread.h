@@ -7,11 +7,14 @@
 
 #include <pthread.h>
 #include "CrashSimulation.h"
+#include "InputThread.h"
 
 typedef struct {
 	pthread_t thread;
 	crashSimulation_t simulation;
 	pthread_mutex_t simulationMutex;
+	
+	inputThread_t *inputThread;
 	
 	int exitCode;
 	volatile int simulate;
@@ -19,7 +22,7 @@ typedef struct {
 	volatile int running;
 } crashSimulationThread_t;
 
-int initCrashSimulationThread(crashSimulationThread_t *p_thread);
+int initCrashSimulationThread(crashSimulationThread_t *p_thread, inputThread_t *p_inputThread);
 int destroyCrashSimulationThread(crashSimulationThread_t *p_thread);
 
 int startCrashSimulationThread(crashSimulationThread_t *p_thread);

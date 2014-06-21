@@ -108,7 +108,7 @@ static int init()
 		return -1;
 	
 	PRINT_INFO("Init SimulationThread...\n");
-	if(initCrashSimulationThread(&simulationThread) != 0)
+	if(initCrashSimulationThread(&simulationThread, &inputThread) != 0)
 		return -1;
 	
 	PRINT_INFO("Init HypothesisMapper...\n");
@@ -154,7 +154,7 @@ static void join()
 static void save() 
 {
 	PRINT_INFO("Saving results...\n");
-	SAVE_TIMES_TO_FILE("times.txt");
+	saveTimeToFile("times.txt");
 	PRINT_INFO("[Saved]\n");
 }
 

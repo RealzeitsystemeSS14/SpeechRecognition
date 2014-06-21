@@ -1,8 +1,8 @@
 #include "CrashSimulationThread.h"
 #include "SimulationDrawer.h"
 #include "Utils.h"
-#include "TimeTaking.h"
 #include "RTScheduling.h"
+#include "TimeTaking.h"
 
 #define GUI_WIDTH 640
 #define GUI_HEIGHT 480
@@ -13,7 +13,7 @@
 #define DEF_START_VELOCITY (SIMULATION_RATE * DEF_ACCELERATION)
 
 
-int initCrashSimulationThread(crashSimulationThread_t *p_thread)
+int initCrashSimulationThread(crashSimulationThread_t *p_thread, inputThread_t *p_inputThread)
 {
 	int ret;
 	pthread_mutexattr_t attr;
@@ -39,6 +39,7 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread)
 	p_thread->keepRunning = 0;
 	p_thread->running = 0;
 	p_thread->exitCode = 0;
+	p_thread->inputThread = p_inputThread;
 	
 	ret = initSimulationDrawer(GUI_WIDTH, GUI_HEIGHT);
 	if(ret != 0) {
@@ -82,26 +83,24 @@ int destroyCrashSimulationThread(crashSimulationThread_t *p_thread)
 
 static int stepSimulationThreadSafe(crashSimulationThread_t *p_thread)
 {
-	HOLD_TIME_TAKING(simulationExecutionTime);
+	holdTimeTaking();
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	RESUME_TIME_TAKING(simulationExecutionTime);
-	RESTART_TIME_TAKING(simulationStepCSTime);
+	resumeTimeTaking();
 	int ret = stepSimulation(&p_thread->simulation);
-	STOP_TIME_TAKING(simulationStepCSTime);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	return ret;
 }
 
 static void drawSimulationThreadSafe(crashSimulationThread_t *p_thread, int p_status)
 {
-	HOLD_TIME_TAKING(simulationExecutionTime);
+	holdTimeTaking();
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	RESUME_TIME_TAKING(simulationExecutionTime);
+	resumeTimeTaking();
 	int pos = p_thread->simulation.car.position;
 	int dist = p_thread->simulation.distance;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
-	drawSimulation(pos, dist, p_status);
+	drawSimulation(pos, dist, p_status, p_thread->inputThread->listening);
 }
 
 static void* runThread(void *arg)
@@ -119,15 +118,13 @@ static void* runThread(void *arg)
 	}
 	
 	while(simulationThread->keepRunning) {
-		// take time for simulation task
-		RESTART_TIME_TAKING(simulationExecutionTime);
+		restartTimeTaking();
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
 			ret = stepSimulationThreadSafe(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
-		// stop watch before sleeping
-		STOP_TIME_TAKING(simulationExecutionTime);
+		stopTimeTaking();
 		
 		simulationThread->exitCode = sleepRate(&loopRate);
 		if(simulationThread->exitCode != 0) {
@@ -179,9 +176,7 @@ int joinCrashSimulationThread(crashSimulationThread_t *p_thread)
 
 int startCrashSimulation(crashSimulationThread_t *p_thread)
 {
-	HOLD_TIME_TAKING(mapperExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	RESUME_TIME_TAKING(mapperExecutionTime);
 	p_thread->simulation.car.brake = 0;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	p_thread->simulate = 1;
@@ -198,9 +193,7 @@ int resetCrashSimulation(crashSimulationThread_t *p_thread)
 {
 	int ret;
 	stopCrashSimulation(p_thread);
-	HOLD_TIME_TAKING(mapperExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	RESUME_TIME_TAKING(mapperExecutionTime);
 	p_thread->simulation.car.position = 0;
 	p_thread->simulation.car.velocity = 0;
 	p_thread->simulation.car.brake = 0;
@@ -213,9 +206,7 @@ int resetCrashSimulation(crashSimulationThread_t *p_thread)
 
 int brakeCar(crashSimulationThread_t *p_thread)
 {
-	HOLD_TIME_TAKING(mapperExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	RESUME_TIME_TAKING(mapperExecutionTime);
 	if(simulationHasStarted(&p_thread->simulation))
 		p_thread->simulation.car.brake = 1;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
