@@ -151,7 +151,7 @@ int startCrashSimulationThread(crashSimulationThread_t *p_thread)
 	}
 	
 	p_thread->keepRunning = 1;
-	ret = pthread_create(&p_thread->thread, NULL, runThread, p_thread);
+	ret = pthread_create(&p_thread->thread, &attr, runThread, p_thread);
 	if(ret != 0) {
 		PRINT_ERR("Failed to create simulation thread (%d).\n", ret);
 		return ret;

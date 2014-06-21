@@ -48,14 +48,9 @@ static void closeApplication()
 }
 
 static int init()
-{
-	PRINT_INFO("Initializing scheduling policy...\n");
-	if(initRTCurrentThread(MAPPER_PRIORITY) != 0)
-		return -1;
-	
+{	
 	PRINT_INFO("Initializing allegro...\n");
 	allegro_init();
-	install_timer();
 	set_close_button_callback(closeApplication);
 	
 	// have to be after allegro init because allegro initializes its own sighandler
@@ -169,7 +164,6 @@ static void destroy()
 	
 	cmd_ln_free_r(config);
 	
-	remove_timer();
 	allegro_exit();
 	
 	PRINT_INFO("[Destroyed]\n");
@@ -187,6 +181,11 @@ int main(int argc, char** argv)
 	if(ret != 0)
 		return ret;
 	
+	// must be placed after all initialization, because pocketsphinx + allegro
+	// create own threads which would inherit the realtime prio
+	PRINT_INFO("Initializing scheduling policy...\n");
+	if(initRTCurrentThread(MAPPER_PRIORITY) != 0)
+		return -1;
 	initialized = 1;
 	loopHypothesisMapper(&hypMapper);
 	

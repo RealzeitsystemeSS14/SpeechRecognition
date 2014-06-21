@@ -4,24 +4,26 @@
 #define MSEC_PER_SEC 1000
 #define USEC_PER_MSEC 1000
 
-static void getTimevalDiff(struct timeval *p_begin, struct timeval *p_end, struct timeval *p_result)
+static struct timeval getTimevalDiff(struct timeval *p_begin, struct timeval *p_end)
 {
 	// copy begin to result
-	*p_result = *p_begin;
+	struct timeval result = *p_begin;
  
-	if (p_end->tv_usec < p_result->tv_usec) {
-		int nsec = (p_result->tv_usec - p_end->tv_usec) / USEC_PER_SEC + 1;
-		p_result->tv_usec -= USEC_PER_SEC * nsec;
-		p_result->tv_sec += nsec;
+	if (p_end->tv_usec < result.tv_usec) {
+		int nsec = (result.tv_usec - p_end->tv_usec) / USEC_PER_SEC + 1;
+		result.tv_usec -= USEC_PER_SEC * nsec;
+		result.tv_sec += nsec;
 	}
-	if ((p_end->tv_usec - p_result->tv_usec) > USEC_PER_SEC) {
-		int nsec = (p_end->tv_usec - p_result->tv_usec) / USEC_PER_SEC;
-		p_result->tv_usec += USEC_PER_SEC * nsec;
-		p_result->tv_sec -= nsec;
+	if ((p_end->tv_usec - result.tv_usec) > USEC_PER_SEC) {
+		int nsec = (p_end->tv_usec - result.tv_usec) / USEC_PER_SEC;
+		result.tv_usec += USEC_PER_SEC * nsec;
+		result.tv_sec -= nsec;
 	}
 	
-	p_result->tv_sec = p_end->tv_sec - p_result->tv_sec;
-	p_result->tv_usec = p_end->tv_usec - p_result->tv_usec;
+	result.tv_sec = p_end->tv_sec - result.tv_sec;
+	result.tv_usec = p_end->tv_usec - result.tv_usec;
+	
+	return result;
 }
 
 int startWatch(stopWatch_t* p_watch)
@@ -37,7 +39,7 @@ int stopWatch(stopWatch_t* p_watch)
 	if(ret != 0)
 		return ret;
 		
-	getTimevalDiff(&p_watch->lastStamp, &end, &diff);
+	diff = getTimevalDiff(&p_watch->lastStamp, &end);
 	
 	// add diff to total measurement
 	p_watch->measured.tv_sec += diff.tv_sec;
