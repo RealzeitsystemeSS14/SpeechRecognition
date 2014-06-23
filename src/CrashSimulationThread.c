@@ -10,7 +10,7 @@
 #define DEF_DISTANCE 500000
 #define DEF_ACCELERATION 100
 #define DEF_BRAKE_ACCELERATION 100
-#define SIMULATION_RATE 30
+#define SIMULATION_RATE 5
 #define SIMULATION_INTERVAL_US (1000000 / SIMULATION_RATE)
 #define DEF_START_VELOCITY (SIMULATION_RATE * DEF_ACCELERATION)
 
@@ -80,9 +80,9 @@ int destroyCrashSimulationThread(crashSimulationThread_t *p_thread)
 
 static int stepSimulationThreadSafe(crashSimulationThread_t *p_thread)
 {
-	holdTimeTaking();
+	//TODO holdTimeTaking();
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	resumeTimeTaking();
+	//TODO resumeTimeTaking();
 	int ret = stepSimulation(&p_thread->simulation);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	return ret;
@@ -90,9 +90,9 @@ static int stepSimulationThreadSafe(crashSimulationThread_t *p_thread)
 
 static void drawSimulationThreadSafe(crashSimulationThread_t *p_thread, int p_status)
 {
-	holdTimeTaking();
+	//TODO holdTimeTaking();
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	resumeTimeTaking();
+	//TODO resumeTimeTaking();
 	int pos = p_thread->simulation.car.position;
 	int dist = p_thread->simulation.distance;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
@@ -146,13 +146,13 @@ static void* runThread(void *arg)
 	}
 	
 	while(simulationThread->keepRunning) {
-		restartTimeTaking();
+		//TODO restartTimeTaking();
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
 			ret = stepSimulationThreadSafe(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
-		stopTimeTaking();
+		//TODO stopTimeTaking();
 		
 		simulationThread->exitCode = sleepRate(&loopRate);
 		if(simulationThread->exitCode != 0) {

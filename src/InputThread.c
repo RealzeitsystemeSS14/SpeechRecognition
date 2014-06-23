@@ -82,9 +82,11 @@ static int record(inputThread_t *p_thread)
         return ret;
 	}
 	
+	holdTimeTaking();
 	//check if not silent
 	while (((ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE)) == 0) && p_thread->keepRunning ) 
         usleep(10000);
+	resumeTimeTaking();
 	ts = p_thread->contAudioDevice->read_ts;
 	p_thread->listenState = INPUT_PROCESSING;	
 	//add read audio data to audioBuffer
@@ -119,8 +121,10 @@ static int record(inputThread_t *p_thread)
     while (ad_read(p_thread->audioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
 	
+	holdTimeTaking();
 	// enqueuing can also block
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
+	resumeTimeTaking();
 	
     return ret;
 }
@@ -186,7 +190,9 @@ static void* runThread(void * arg)
 	
 	while(sphinxThread->keepRunning) {
 		
+		restartTimeTaking();
 		sphinxThread->exitCode = record(sphinxThread);
+		stopTimeTaking();
 		
 		// if decoding failed retry MAX_RETRIES times
 		if(sphinxThread->exitCode != 0)
