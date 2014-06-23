@@ -62,12 +62,12 @@ float getWatchSec(stopWatch_t* p_watch)
 }
 unsigned int getWatchMSec(stopWatch_t* p_watch)
 {
-	return ((unsigned int) p_watch->measured.tv_sec) * MSEC_PER_SEC + p_watch->measured.tv_usec / USEC_PER_MSEC;
+	return (p_watch->measured.tv_sec * MSEC_PER_SEC) + (p_watch->measured.tv_usec / USEC_PER_MSEC);
 }
 
 unsigned int getWatchUSec(stopWatch_t* p_watch)
 {
-	return ((unsigned int) ((unsigned int)p_watch->measured.tv_sec) * USEC_PER_SEC + p_watch->measured.tv_usec);
+	return (p_watch->measured.tv_sec * USEC_PER_SEC) + p_watch->measured.tv_usec;
 }
 
 int initRate(rate_t* p_rate, unsigned int p_targetRate)
@@ -94,11 +94,8 @@ int sleepRate(rate_t* p_rate)
 	p_rate->lastDiffUS = getWatchUSec(&p_rate->watch);
 	intervalUsec = USEC_PER_SEC / p_rate->targetRate;
 	
-	if(p_rate->lastDiffUS < intervalUsec) {
-		ret = usleep(intervalUsec - p_rate->lastDiffUS);
-		if(ret != 0)
-			return ret;
-	}
+	if(p_rate->lastDiffUS < intervalUsec)
+		usleep(intervalUsec - p_rate->lastDiffUS);
 	
 	resetWatch(&p_rate->watch);
 	ret = startWatch(&p_rate->watch);
