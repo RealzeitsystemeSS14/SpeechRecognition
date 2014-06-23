@@ -11,6 +11,7 @@
 #define DEF_ACCELERATION 100
 #define DEF_BRAKE_ACCELERATION 100
 #define SIMULATION_RATE 30
+#define SIMULATION_INTERVAL_US (1000000 / SIMULATION_RATE)
 #define DEF_START_VELOCITY (SIMULATION_RATE * DEF_ACCELERATION)
 
 int initCrashSimulationThread(crashSimulationThread_t *p_thread, inputThread_t *p_inputThread)
@@ -127,6 +128,7 @@ static int destroyAllegroComponents(crashSimulationThread_t *p_thread)
 static void* runThread(void *arg)
 {
 	rate_t loopRate;
+	unsigned int timeAccount = 0;
 	int ret = 0;
 	
 	crashSimulationThread_t *simulationThread = (crashSimulationThread_t*) arg;
@@ -146,9 +148,15 @@ static void* runThread(void *arg)
 	
 	while(simulationThread->keepRunning) {
 		restartTimeTaking();
+		timeAccount += lastDiffUS(&loopRate);
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
-			ret = stepSimulationThreadSafe(simulationThread);
+			while(timeAccount >= SIMULATION_INTERVAL_US) {
+				ret = stepSimulationThreadSafe(simulationThread);
+				timeAccount -= SIMULATION_INTERVAL_US;
+			}
+		} else {
+			timeAccount = 0;
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
 		stopTimeTaking();
@@ -158,7 +166,6 @@ static void* runThread(void *arg)
 			PRINT_ERR("Failed to sleep (%d).\n", simulationThread->exitCode);
 			simulationThread->keepRunning = 0;
 		}
-		
 	}
 	
 	destroyAllegroComponents(simulationThread);

@@ -74,6 +74,7 @@ int initRate(rate_t* p_rate, unsigned int p_targetRate)
 {
 	int ret;
 	p_rate->targetRate = p_targetRate;
+	p_rate->lastDiffUS = 0;
 	ret = startWatch(&p_rate->watch);
 	if(ret != 0)
 		return ret;
@@ -83,18 +84,18 @@ int initRate(rate_t* p_rate, unsigned int p_targetRate)
 
 int sleepRate(rate_t* p_rate) 
 {
-	useconds_t diffUsec, intervalUsec;
+	unsigned int intervalUsec;
 	int ret;
 	
 	ret = stopWatch(&p_rate->watch);
 	if(ret != 0)
 		return ret;
 		
-	diffUsec = getWatchUSec(&p_rate->watch);
+	p_rate->lastDiffUS = getWatchUSec(&p_rate->watch);
 	intervalUsec = USEC_PER_SEC / p_rate->targetRate;
 	
-	if(diffUsec < intervalUsec) {
-		ret = usleep(intervalUsec - diffUsec);
+	if(p_rate->lastDiffUS < intervalUsec) {
+		ret = usleep(intervalUsec - p_rate->lastDiffUS);
 		if(ret != 0)
 			return ret;
 	}
@@ -105,6 +106,11 @@ int sleepRate(rate_t* p_rate)
 		return ret;
 	
 	return 0;
+}
+
+unsigned int lastDiffUS(rate_t *p_rate)
+{
+	return p_rate->lastDiffUS;
 }
 
 void toLowerCase(char *p_str)

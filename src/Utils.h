@@ -24,11 +24,13 @@ useconds_t getWatchUSec(stopWatch_t* p_watch);
 
 typedef struct {
 	unsigned int targetRate;
+	unsigned int lastDiffUS;
 	stopWatch_t watch;
 } rate_t;
 
-int initRate(rate_t* p_rate, unsigned int p_targetRate);
-int sleepRate(rate_t* p_rate);
+int initRate(rate_t *p_rate, unsigned int p_targetRate);
+unsigned int lastDiffUS(rate_t *p_rate);
+int sleepRate(rate_t *p_rate);
 void toLowerCase(char *p_str);
 
 #endif
