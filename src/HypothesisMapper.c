@@ -33,10 +33,11 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		if(hyp == poisonPill)
 			continue;
 		
+		restartTimeTaking();
 		//change hypothesis to lower case, to make compare case insensitive
 		toLowerCase(hyp);
 		// check which command was called
-		PRINT_INFO("Hypothesis received: %s.\n", hyp);
+		//PRINT_INFO("Hypothesis received: %s.\n", hyp);
 		if(strcmp(hyp, START_CMD) == 0)
 			startCrashSimulation(p_mapper->simulationThread);
 		else if(strcmp(hyp, STOP_CMD) == 0)
@@ -46,6 +47,7 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		} else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
 			
+		stopTimeTaking();
 		releaseString(hyp);
 	}
 	

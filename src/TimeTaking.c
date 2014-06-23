@@ -1,6 +1,6 @@
 #include "TimeTaking.h"
 
-#define TIME_TAKING_NAME "Interpreter"
+#define TIME_TAKING_NAME "Mapper"
 static stopWatch_t watch;
 static unsigned int max;
 
