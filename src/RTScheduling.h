@@ -3,16 +3,16 @@
 
 #include <pthread.h>
 
-#define INPUT_PRIORITY 50
-#define INTERPRETER_PRIORITY 50
-#define SIMULATION_PRIORITY 51
-#define MAPPER_PRIORITY 50
+#define INPUT_PRIORITY 51
+#define INTERPRETER_PRIORITY 52
+#define SIMULATION_PRIORITY 53
+#define MAPPER_PRIORITY 54
 
-// stack must at least be 16384
+// stack must at least be 16384 (1 page)
 // stack must be multiple of system page size
-#define INPUT_STACKSIZE (16384)
+#define INPUT_STACKSIZE (2 * 16384)
 #define INTERPRETER_STACKSIZE (2 * 16384)
-#define SIMULATION_STACKSIZE (16384)
+#define SIMULATION_STACKSIZE (4 * 16384)
 #define BUTTON_STACKSIZE (16384)
 
 int initRTCurrentThread(int p_priority);

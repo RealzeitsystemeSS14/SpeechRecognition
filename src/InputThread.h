@@ -13,6 +13,9 @@
 #include "Utils.h"
 
 #define INPUT_BUFFER_SIZE 1024
+#define INPUT_WAITING 0
+#define INPUT_PROCESSING 1
+#define INPUT_LISTENING 2
 
 typedef struct {
 	pthread_t thread;
@@ -20,12 +23,14 @@ typedef struct {
 	ad_rec_t *audioDevice;
 	cont_ad_t *contAudioDevice;
 	
+	pthread_barrier_t startBarrier;
+	
 	int16 inputBuffer[INPUT_BUFFER_SIZE];
 	
 	int exitCode;
 	volatile int running;
 	volatile int keepRunning;
-	volatile int listening;
+	volatile int listenState;
 } inputThread_t;
 
 int initInputThread(inputThread_t *p_thread, blockingQueue_t *p_audioQueue);

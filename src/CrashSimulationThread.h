@@ -13,6 +13,7 @@ typedef struct {
 	pthread_t thread;
 	crashSimulation_t simulation;
 	pthread_mutex_t simulationMutex;
+	pthread_barrier_t startBarrier;
 	
 	inputThread_t *inputThread;
 	

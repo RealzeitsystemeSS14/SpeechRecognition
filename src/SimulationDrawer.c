@@ -1,5 +1,6 @@
 #include <allegro.h>
 #include "SimulationDrawer.h"
+#include "InputThread.h"
 #include "Utils.h"
 
 #define PERCENT_OF(val, per) (SCREEN_W / (100 / per))
@@ -8,6 +9,7 @@
 #define BLUE 2
 #define RED 3
 #define GREEN 4
+#define YELLOW 5
 
 #define BOX_BORDER_WIDTH 2
 
@@ -49,6 +51,11 @@ int initSimulationDrawer(int p_width, int p_height)
 	colour.b = 0;
 	set_color(GREEN, &colour);
 	
+	colour.r = 255;
+	colour.g = 255;
+	colour.b = 0;
+	set_color(YELLOW, &colour);
+	
 	// create double buffering bit map to draw on
 	dblbuffer = create_bitmap(SCREEN_W, SCREEN_H);
 	clear(dblbuffer);
@@ -89,15 +96,21 @@ int drawCar(unsigned int p_carPosition, unsigned int p_hlineOffset)
 	return 0;
 }
 
-int drawSpeechState(int p_listening) {
+void drawSpeechState(int p_listenState)
+{
 	char *text;
 	int color;
-	if(p_listening) {
+	if(p_listenState == INPUT_LISTENING) {
 		color = GREEN;
 		text = "Listening";
-	} else {
+	} else if(p_listenState == INPUT_WAITING) {
 		color = RED;
 		text = "Waiting";
+	} else if(p_listenState == INPUT_PROCESSING) {
+		color = YELLOW;
+		text = "Processing";
+	} else {
+		return;
 	}
 	
 	unsigned int boxLeftOffset = PERCENT_OF(SCREEN_W, 1);
@@ -108,8 +121,6 @@ int drawSpeechState(int p_listening) {
 	rectfill(dblbuffer, boxLeftOffset - BOX_BORDER_WIDTH, boxTopOffset - BOX_BORDER_WIDTH, boxLeftOffset + boxWidth + BOX_BORDER_WIDTH, boxTopOffset + boxHeight + BOX_BORDER_WIDTH, BLACK);
 	rectfill(dblbuffer, boxLeftOffset, boxTopOffset, boxLeftOffset + boxWidth, boxTopOffset + boxHeight, color);
 	textout_centre_ex(dblbuffer, font, text, boxLeftOffset + (boxWidth / 2), boxTopOffset + (boxHeight / 2) - 2, BLACK, -1);
-	
-	return 0;
 }
 
 int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_status, int p_listening)

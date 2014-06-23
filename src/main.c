@@ -1,5 +1,4 @@
 #include <signal.h>
-#include <allegro.h>
 #include "InputThread.h"
 #include "InterpreterThread.h"
 #include "CrashSimulationThread.h"
@@ -49,18 +48,11 @@ static void closeApplication()
 
 static int init()
 {	
-	PRINT_INFO("Initializing allegro...\n");
-	allegro_init();
-	set_close_button_callback(closeApplication);
-	
-	// have to be after allegro init because allegro initializes its own sighandler
-	setSignalAction();
-	
 	initTimeTaking();
 	
 	err_set_logfp(fopen("/dev/null", "w"));
+	
 	PRINT_INFO("Getting Config...\n");
-
     config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
                          "-lm", "6706.lm",
@@ -101,7 +93,7 @@ static int init()
 	PRINT_INFO("Init InputThread...\n");
 	if(initInputThread(&inputThread, &audioQueue) != 0)
 		return -1;
-	
+		
 	PRINT_INFO("Init SimulationThread...\n");
 	if(initCrashSimulationThread(&simulationThread, &inputThread) != 0)
 		return -1;
@@ -164,8 +156,6 @@ static void destroy()
 	
 	cmd_ln_free_r(config);
 	
-	allegro_exit();
-	
 	PRINT_INFO("[Destroyed]\n");
 }
 
@@ -180,12 +170,14 @@ int main(int argc, char** argv)
 	ret = start();
 	if(ret != 0)
 		return ret;
-	
-	// must be placed after all initialization, because pocketsphinx + allegro
-	// create own threads which would inherit the realtime prio
+		
+	// set priority and scheduler
 	PRINT_INFO("Initializing scheduling policy...\n");
 	if(initRTCurrentThread(MAPPER_PRIORITY) != 0)
 		return -1;
+	
+	// have to be after allegro init because allegro initializes its own sighandler
+	setSignalAction();
 	initialized = 1;
 	loopHypothesisMapper(&hypMapper);
 	
