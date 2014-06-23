@@ -1,5 +1,5 @@
 #include <allegro.h>
-#include "CrashSimulationThread.h"
+#include "SimulationThread.h"
 #include "SimulationDrawer.h"
 #include "Utils.h"
 #include "RTScheduling.h"
@@ -7,14 +7,12 @@
 
 #define GUI_WIDTH 640
 #define GUI_HEIGHT 480
-#define DEF_DISTANCE 500000
-#define DEF_ACCELERATION 100
-#define DEF_BRAKE_ACCELERATION 100
-#define SIMULATION_RATE 30
+#define DEF_DISTANCE 8
+#define SIMULATION_RATE 5
 #define SIMULATION_INTERVAL_US (1000000 / SIMULATION_RATE)
 #define DEF_START_VELOCITY (SIMULATION_RATE * DEF_ACCELERATION)
 
-int initCrashSimulationThread(crashSimulationThread_t *p_thread, inputThread_t *p_inputThread)
+int initCrashSimulationThread(rtSimulationThread_t *p_thread, inputThread_t *p_inputThread)
 {
 	int ret;
 	pthread_mutexattr_t attr;
@@ -37,7 +35,7 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread, inputThread_t *
 		return ret;
 	}
 	
-	ret = initSimulation(&p_thread->simulation, DEF_ACCELERATION, DEF_BRAKE_ACCELERATION, DEF_DISTANCE, DEF_START_VELOCITY);
+	ret = initSimulation(&p_thread->simulation, DEF_DISTANCE);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init simulation (%d).\n", ret);
 		return ret;
@@ -53,7 +51,7 @@ int initCrashSimulationThread(crashSimulationThread_t *p_thread, inputThread_t *
 	return 0;
 }
 
-int destroyCrashSimulationThread(crashSimulationThread_t *p_thread)
+int destroyCrashSimulationThread(rtSimulationThread_t *p_thread)
 {
 	int ret;
 	
@@ -78,7 +76,7 @@ int destroyCrashSimulationThread(crashSimulationThread_t *p_thread)
 	return 0;
 }
 
-static int stepSimulationThreadSafe(crashSimulationThread_t *p_thread)
+static int stepSimulationThreadSafe(rtSimulationThread_t *p_thread)
 {
 	//TODO holdTimeTaking();
 	pthread_mutex_lock(&p_thread->simulationMutex);
@@ -88,19 +86,26 @@ static int stepSimulationThreadSafe(crashSimulationThread_t *p_thread)
 	return ret;
 }
 
-static void drawSimulationThreadSafe(crashSimulationThread_t *p_thread, int p_status)
+static void drawSimulationThreadSafe(rtSimulationThread_t *p_thread, int p_status)
 {
+	int topObstalces[OBSTACLE_COUNT];
+	int botObstalces[OBSTACLE_COUNT];
+	int pos, dist, i;
 	//TODO holdTimeTaking();
 	pthread_mutex_lock(&p_thread->simulationMutex);
 	//TODO resumeTimeTaking();
-	int pos = p_thread->simulation.car.position;
-	int dist = p_thread->simulation.distance;
+	pos = p_thread->simulation.position;
+	dist = p_thread->simulation.distance;
+	for(i = 0; i < OBSTACLE_COUNT; ++i) {
+		topObstalces[i] = p_thread->simulation.topPosition[i];
+		botObstalces[i] = p_thread->simulation.topPosition[i];
+	}
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
-	drawSimulation(pos, dist, p_status, p_thread->inputThread->listenState);
+	drawSimulation(pos, dist, topObstalces, botObstalces, p_status, p_thread->inputThread->listenState);
 }
 
-static int initAllegroComponents(crashSimulationThread_t *p_thread)
+static int initAllegroComponents(rtSimulationThread_t *p_thread)
 {
 	int ret;
 	PRINT_INFO("Init allegro...\n");
@@ -114,7 +119,7 @@ static int initAllegroComponents(crashSimulationThread_t *p_thread)
 	return ret;
 }
 
-static int destroyAllegroComponents(crashSimulationThread_t *p_thread)
+static int destroyAllegroComponents(rtSimulationThread_t *p_thread)
 {
 	int ret;
 	ret = destroySimulationDrawer();
@@ -130,7 +135,7 @@ static void* runThread(void *arg)
 	rate_t loopRate;
 	int ret = 0;
 	
-	crashSimulationThread_t *simulationThread = (crashSimulationThread_t*) arg;
+	rtSimulationThread_t *simulationThread = (rtSimulationThread_t*) arg;
 	//allegro has to be initialized int thread
 	//allegro creates thread -> shall inherit from this one
 	ret = initAllegroComponents(simulationThread);
@@ -150,6 +155,8 @@ static void* runThread(void *arg)
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
 			ret = stepSimulationThreadSafe(simulationThread);
+			if(ret != 0)
+				stopSimulation(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
 		//TODO stopTimeTaking();
@@ -167,7 +174,7 @@ static void* runThread(void *arg)
 	pthread_exit(&simulationThread->exitCode);
 }
 
-int startCrashSimulationThread(crashSimulationThread_t *p_thread)
+int startCrashSimulationThread(rtSimulationThread_t *p_thread)
 {
 	int ret;
 	pthread_attr_t attr;
@@ -192,55 +199,50 @@ int startCrashSimulationThread(crashSimulationThread_t *p_thread)
 	return 0;
 }
 
-int stopCrashSimulationThread(crashSimulationThread_t *p_thread)
+int stopCrashSimulationThread(rtSimulationThread_t *p_thread)
 {
 	p_thread->keepRunning = 0;
 	
 	return 0;
 }
 
-int joinCrashSimulationThread(crashSimulationThread_t *p_thread)
+int joinCrashSimulationThread(rtSimulationThread_t *p_thread)
 {
 	void* retVal;
 	pthread_join(p_thread->thread, &retVal);
 	return *((int*) retVal);
 }
 
-int startCrashSimulation(crashSimulationThread_t *p_thread)
+int startSimulation(rtSimulationThread_t *p_thread)
 {
-	pthread_mutex_lock(&p_thread->simulationMutex);
-	p_thread->simulation.car.brake = 0;
-	pthread_mutex_unlock(&p_thread->simulationMutex);
 	p_thread->simulate = 1;
 	return 0;
 }
 
-int stopCrashSimulation(crashSimulationThread_t *p_thread)
+int stopSimulation(rtSimulationThread_t *p_thread)
 {
 	p_thread->simulate = 0;
 	return 0;
 }
 
-int resetCrashSimulation(crashSimulationThread_t *p_thread)
+int resetSimulation(rtSimulationThread_t *p_thread)
 {
-	int ret;
-	stopCrashSimulation(p_thread);
+	int i;
+	stopSimulation(p_thread);
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	p_thread->simulation.car.position = 0;
-	p_thread->simulation.car.velocity = 0;
-	p_thread->simulation.car.brake = 0;
-	p_thread->simulation.car.velocity = p_thread->simulation.startVelocity;
-	ret = randomSimulationStart(&p_thread->simulation);
+	for(i = 0; i < OBSTACLE_COUNT; ++i) {
+		p_thread->simulation.topPosition[i] = p_thread->simulation.distance + 1;
+		p_thread->simulation.botPosition[i] = p_thread->simulation.distance + 1;
+	}
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
-	return ret;
+	return 0;
 }
 
-int brakeCar(crashSimulationThread_t *p_thread)
+int moveToPosition(rtSimulationThread_t *p_thread, int p_position)
 {
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	if(simulationHasStarted(&p_thread->simulation))
-		p_thread->simulation.car.brake = 1;
+	p_thread->simulation.position = p_position;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
 	return 0;

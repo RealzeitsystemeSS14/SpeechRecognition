@@ -2,6 +2,7 @@
 #include "SimulationDrawer.h"
 #include "InputThread.h"
 #include "Utils.h"
+#include "Simulation.h"
 
 #define PERCENT_OF(val, per) (SCREEN_W / (100 / per))
 #define WHITE 0
@@ -123,28 +124,55 @@ void drawSpeechState(int p_listenState)
 	textout_centre_ex(dblbuffer, font, text, boxLeftOffset + (boxWidth / 2), boxTopOffset + (boxHeight / 2) - 2, BLACK, -1);
 }
 
-int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_status, int p_listening)
+int drawSimulation(int p_position, int p_distance, int *p_topObstacles, int *p_botObstacles, int p_state, int p_listenState)
 {
 	unsigned int hlineOffset = PERCENT_OF(SCREEN_W, 5);
 	unsigned int hlineLength = SCREEN_W - hlineOffset * 2;
-	unsigned int vlineOffset = PERCENT_OF(SCREEN_H, 4);
-	unsigned int vlineLength = SCREEN_H - vlineOffset * 2;
-	
-	unsigned int carX = (((1000 * p_carPosition) / p_distance) * hlineLength) / 1000;
+	unsigned int hlineYbot = SCREEN_H - PERCENT_OF(SCREEN_H, 10);
+	unsigned int hlineYtop = hlineYbot - PERCENT_OF(SCREEN_H, 30);
+	unsigned int obstacleSize = PERCENT_OF(SCREEN_H, 2);
+	unsigned int playerX = hlineOffset;
+	unsigned int playerY;
+	unsigned int segmentLength = hlineLength / p_distance;
 	
 	clear(dblbuffer);
 	
-	hline(dblbuffer, hlineOffset, SCREEN_H / 2, hlineOffset + hlineLength, BLACK);
-	vline(dblbuffer, hlineOffset + hlineLength, vlineOffset, vlineOffset + vlineLength, BLACK);
-	drawCar(carX, hlineOffset);
+	hline(dblbuffer, hlineOffset, hlineYtop, hlineOffset + hlineLength, BLACK);
+	hline(dblbuffer, hlineOffset, hlineYbot, hlineOffset + hlineLength, BLACK);
+	
+	if(p_position == TOP_POSITION)
+		playerY = hlineYtop;
+	else if (p_position == BOT_POSITION)
+		playerY = hlineYbot;
+	else
+		return;
+	
+	// draw player
+	rectfill(dblbuffer, playerX - obstacleSize, playerY - obstacleSize, playerX + obstacleSize, playerY + obstacleSize, BLUE);
+	
+	int i;
+	unsigned int obstacelX, obstacleY;
+	
+	// draw obstacles
+	for(i = 0; i < OBSTACLE_COUNT; ++i) {
+		if(p_topObstacles[i] >= 0 && p_topObstacles[i] <= p_distance) {
+			obstacelX = hlineOffset + hlineLength - p_topObstacles[i] * segmentLength;
+			obstacleY = hlineYtop;
+			rectfill(dblbuffer, obstacelX - obstacleSize, obstacleY - obstacleSize, obstacelX + obstacleSize, obstacleY + obstacleSize, RED);
+		}
+		
+		if(p_botObstacles[i] >= 0 && p_botObstacles[i] <= p_distance) {
+			obstacelX = hlineOffset + hlineLength - p_botObstacles[i] * segmentLength;
+			obstacleY = hlineYbot;
+			rectfill(dblbuffer, obstacelX - obstacleSize, obstacleY - obstacleSize, obstacelX + obstacleSize, obstacleY + obstacleSize, RED);
+		}
+	}
 	
 	// -1 for background to be invisible
-	if(p_status == -1)
-		textout_centre_ex(dblbuffer, font, "Car crashed!", SCREEN_W / 2, 0, RED, -1);
-	else if(p_status == 1)
-		textout_centre_ex(dblbuffer, font, "Car stopped!", SCREEN_W / 2, 0, GREEN, -1);
+	if(p_state != 0)
+		textout_centre_ex(dblbuffer, font, "Crashed!", SCREEN_W / 2, 0, RED, -1);
 	
-	drawSpeechState(p_listening);
+	drawSpeechState(p_listenState);
 	
     blit(dblbuffer, screen, 0, 0, 0, 0, SCREEN_W, SCREEN_H);
 	

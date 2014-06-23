@@ -1,10 +1,10 @@
 #ifndef SIMULATION_DRAWER_H_
 #define SIMULATION_DRAWER_H_
 
-#include "CrashSimulationThread.h"
+#include "SimulationThread.h"
 
 int initSimulationDrawer(int p_width, int p_height);
-int drawSimulation(unsigned int p_carPosition, unsigned int p_distance, int p_carCrashed, int p_listening);
+int drawSimulation(int p_position, int p_distance, int *p_topObstacles, int *p_botObstacles, int p_state, int p_listenState);
 int destroySimulationDrawer();
 
 #endif

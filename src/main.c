@@ -1,7 +1,7 @@
 #include <signal.h>
 #include "InputThread.h"
 #include "InterpreterThread.h"
-#include "CrashSimulationThread.h"
+#include "SimulationThread.h"
 #include "HypothesisMapper.h"
 #include "TimeTaking.h"
 #include "Utils.h"
@@ -14,7 +14,7 @@ static blockingQueue_t hypQueue;
 
 static inputThread_t inputThread;
 static interpreterThread_t interpreterThread;
-static crashSimulationThread_t simulationThread;
+static rtSimulationThread_t simulationThread;
 static hypothesisMapper_t hypMapper;
 
 static volatile int initialized = 0;
@@ -55,8 +55,8 @@ static int init()
 	PRINT_INFO("Getting Config...\n");
     config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
-                         "-lm", "6706.lm",
-                         "-dict", "6706.dic",
+                         "-lm", "4647.lm",
+                         "-dict", "4647.dic",
 						 "-ds", "2",
 						 "-topn", "2",
 						 "-maxwpf", "5",
