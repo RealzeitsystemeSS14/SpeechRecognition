@@ -127,8 +127,6 @@ static int destroyAllegroComponents(crashSimulationThread_t *p_thread)
 
 static void* runThread(void *arg)
 {
-	rate_t loopRate;
-	unsigned int timeAccount = 0;
 	int ret = 0;
 	
 	crashSimulationThread_t *simulationThread = (crashSimulationThread_t*) arg;
@@ -140,32 +138,16 @@ static void* runThread(void *arg)
 		
 	PRINT_INFO("SimulationThread started.\n");	
 	simulationThread->running = 1;
-	simulationThread->exitCode = initRate(&loopRate, SIMULATION_RATE);
-	if(simulationThread->exitCode != 0) {
-		PRINT_ERR("Failed to init rate (%d).\n", simulationThread->exitCode);
-		simulationThread->keepRunning = 0;
-	}
 	
 	while(simulationThread->keepRunning) {
 		restartTimeTaking();
-		timeAccount += lastDiffUS(&loopRate);
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
-			while(timeAccount >= SIMULATION_INTERVAL_US) {
-				ret = stepSimulationThreadSafe(simulationThread);
-				timeAccount -= SIMULATION_INTERVAL_US;
-			}
-		} else {
-			timeAccount = 0;
+			ret = stepSimulationThreadSafe(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
 		stopTimeTaking();
-		
-		simulationThread->exitCode = sleepRate(&loopRate);
-		if(simulationThread->exitCode != 0) {
-			PRINT_ERR("Failed to sleep (%d).\n", simulationThread->exitCode);
-			simulationThread->keepRunning = 0;
-		}
+		usleep(10000);
 	}
 	
 	destroyAllegroComponents(simulationThread);
