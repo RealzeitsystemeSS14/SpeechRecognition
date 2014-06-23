@@ -3,10 +3,10 @@
 
 #include <pthread.h>
 
-#define INPUT_PRIORITY 51
-#define INTERPRETER_PRIORITY 52
+#define INPUT_PRIORITY 50
+#define INTERPRETER_PRIORITY 50
 #define SIMULATION_PRIORITY 53
-#define MAPPER_PRIORITY 54
+#define MAPPER_PRIORITY 50
 
 // stack must at least be 16384 (1 page)
 // stack must be multiple of system page size
