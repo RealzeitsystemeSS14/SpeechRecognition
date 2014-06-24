@@ -1,4 +1,4 @@
-Language model created by QuickLM on Tue Jun 24 10:47:58 EDT 2014
+Language model created by QuickLM on Tue Jun 24 11:03:11 EDT 2014
 Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
 
 The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
@@ -7,31 +7,35 @@ The code that was used to produce this language model is available in Open Sourc
 Please visit http://www.speech.cs.cmu.edu/tools/ for more information
 
 The (fixed) discount mass is 0.5. The backoffs are computed using the ratio method.
-This model based on a corpus of 3 sentences and 5 words
+This model based on a corpus of 4 sentences and 6 words
 
 \data\
-ngram 1=5
-ngram 2=6
-ngram 3=3
+ngram 1=6
+ngram 2=8
+ngram 3=4
 
 \1-grams:
 -0.7782 </s> -0.3010
 -0.7782 <s> -0.2218
--1.2553 DOWN -0.2218
--1.2553 RESET -0.2218
--1.2553 UP -0.2218
+-1.3802 FLIP -0.2218
+-1.3802 RESET -0.2218
+-1.3802 RUN -0.2218
+-1.3802 STOP -0.2218
 
 \2-grams:
--0.7782 <s> DOWN 0.0000
--0.7782 <s> RESET 0.0000
--0.7782 <s> UP 0.0000
--0.3010 DOWN </s> -0.3010
+-0.9031 <s> FLIP 0.0000
+-0.9031 <s> RESET 0.0000
+-0.9031 <s> RUN 0.0000
+-0.9031 <s> STOP 0.0000
+-0.3010 FLIP </s> -0.3010
 -0.3010 RESET </s> -0.3010
--0.3010 UP </s> -0.3010
+-0.3010 RUN </s> -0.3010
+-0.3010 STOP </s> -0.3010
 
 \3-grams:
--0.3010 <s> DOWN </s>
+-0.3010 <s> FLIP </s>
 -0.3010 <s> RESET </s>
--0.3010 <s> UP </s>
+-0.3010 <s> RUN </s>
+-0.3010 <s> STOP </s>
 
 \end\

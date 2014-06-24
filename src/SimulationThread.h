@@ -35,6 +35,6 @@ int joinCrashSimulationThread(rtSimulationThread_t *p_thread);
 int startSimulation(rtSimulationThread_t *p_thread);
 int stopSimulation(rtSimulationThread_t *p_thread);
 int resetSimulation(rtSimulationThread_t *p_thread);
-int moveToPosition(rtSimulationThread_t *p_thread, int p_position);
+int flipPosition(rtSimulationThread_t *p_thread, int p_position);
 
 #endif

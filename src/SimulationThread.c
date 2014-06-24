@@ -232,16 +232,19 @@ int resetSimulation(rtSimulationThread_t *p_thread)
 	pthread_mutex_lock(&p_thread->simulationMutex);
 	restartSimulation(&p_thread->simulation);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
-	startSimulation(p_thread);
 	
 	return 0;
 }
 
-int moveToPosition(rtSimulationThread_t *p_thread, int p_position)
+int flipPosition(rtSimulationThread_t *p_thread, int p_position)
 {
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	if(p_thread->simulate)
-		p_thread->simulation.position = p_position;
+	if(p_thread->simulate) {
+		if(p_thread->simulation.position == TOP_POSITION)
+			p_thread->simulation.position = BOT_POSITION;
+		else
+			p_thread->simulation.position = TOP_POSITION;
+	}
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
 	return 0;

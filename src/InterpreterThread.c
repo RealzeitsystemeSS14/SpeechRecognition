@@ -20,7 +20,7 @@ int initInterpreterThread(interpreterThread_t *p_thread, blockingQueue_t *p_audi
 	//init decoder, used to interprete audio data
 	p_thread->psDecoder = ps_init(p_config);
     if (p_thread->psDecoder == NULL) {
-		PRINT_ERR("Failed to init Decoder (%d).\n", ret);
+		PRINT_ERR("Failed to init Decoder.\n");
         return -2;
 	}
 		
