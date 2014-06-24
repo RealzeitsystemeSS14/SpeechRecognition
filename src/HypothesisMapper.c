@@ -39,7 +39,7 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		//change hypothesis to lower case, to make compare case insensitive
 		toLowerCase(hyp);
 		// check which command was called
-		//PRINT_INFO("Hypothesis received: %s.\n", hyp);
+		PRINT_INFO("Hypothesis received: %s.\n", hyp);
 		if(strcmp(hyp, START_CMD) == 0)
 			startSimulation(p_mapper->simulationThread);
 		else if(strcmp(hyp, STOP_CMD) == 0)
@@ -48,7 +48,7 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 			resetSimulation(p_mapper->simulationThread);
 		else if(strcmp(hyp, UP_CMD) == 0)
 			moveToPosition(p_mapper->simulationThread, TOP_POSITION);
-		else if(strcmp(hyp, UP_CMD) == 0)
+		else if(strcmp(hyp, DOWN_CMD) == 0)
 			moveToPosition(p_mapper->simulationThread, BOT_POSITION);
 		else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);

@@ -6,25 +6,16 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MIN_RESPAWN_TIME 5
 #define MAX_WAIT 3
+#define SPAWN_OFFSET(s) ((2 * s->distance) / 3)
 
-int initSimulation(rtSimulation_t *p_simulation, int p_distance, int p_minObstacleDistance)
+int initSimulation(rtSimulation_t *p_simulation, int p_distance)
 {		
 	srand(time(NULL));
 	p_simulation->distance = p_distance;
 	p_simulation->position = TOP_POSITION;
-	p_simulation->minObstacleDistance = p_minObstacleDistance;
 	restartSimulation(p_simulation);
 	
 	return 0;
-}
-
-static int stepDiff(rtSimulation_t *p_simulation)
-{
-	int diff = p_simulation->currentStep - p_simulation->lastRespawn;
-	if(p_simulation->lastRespawn > p_simulation->currentStep)
-		diff = diff + INT_MAX + 1;
-	
-	return diff;
 }
 
 static void moveObstacles(rtSimulation_t *p_simulation, int p_position)
@@ -44,24 +35,19 @@ static void moveObstacles(rtSimulation_t *p_simulation, int p_position)
 		if(positions[i] >= p_simulation->distance) {
 			// is out of field
 			positions[i] = -1;
-			respawnTimes[i] = MIN_RESPAWN_TIME + (abs(rand()) % MAX_WAIT);
+			respawnTimes[i] = SPAWN_OFFSET(p_simulation);
 		}
 		
 		if(positions[i] < 0) {
 			// position is negative, so we have to wait to respawn
 			if(respawnTimes[i] == 0) {
-				int diff = stepDiff(p_simulation);
-				if(diff >= p_simulation->minObstacleDistance) {
-					// we respawn after respawn time
-					positions[i] = 0;
-					p_simulation->lastRespawn = p_simulation->currentStep;
-				} else {
-					respawnTimes[i] = p_simulation->minObstacleDistance - diff;
-				}
+				// we respawn after respawn time
+				positions[i] = 0;
 			}
 			if(respawnTimes[i] > 0)
 				--respawnTimes[i];
-		} else {
+		}
+		if(positions[i] >= 0) {
 			// position is not negative, so move obstacle
 			++positions[i];
 		}
@@ -71,7 +57,6 @@ static void moveObstacles(rtSimulation_t *p_simulation, int p_position)
 int stepSimulation(rtSimulation_t *p_simulation)
 {
 	++p_simulation->currentStep;
-	
 	// move obstacles
 	moveObstacles(p_simulation, TOP_POSITION);
 	moveObstacles(p_simulation, BOT_POSITION);
@@ -94,10 +79,10 @@ int stepSimulation(rtSimulation_t *p_simulation)
 void restartSimulation(rtSimulation_t *p_simulation)
 {
 	int i;
-	p_simulation->currentStep = 0;
-	p_simulation->lastRespawn = 0;
 	for(i = 0; i < OBSTACLE_COUNT; ++i) {
-		p_simulation->topPositions[i] = p_simulation->distance + 1;
-		p_simulation->botPositions[i] = p_simulation->distance + 1;
+		p_simulation->topPositions[i] = -1;
+		p_simulation->topRespawnTimes[i] = ((2 * i) - 1) * SPAWN_OFFSET(p_simulation);
+		p_simulation->botPositions[i] = -1;
+		p_simulation->botRespawnTimes[i] = (2 * i) * SPAWN_OFFSET(p_simulation);
 	}
 }

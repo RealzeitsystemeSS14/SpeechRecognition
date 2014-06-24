@@ -7,8 +7,7 @@
 
 #define GUI_WIDTH 640
 #define GUI_HEIGHT 480
-#define DEF_DISTANCE 8
-#define DEF_MIN_OBSTACLE_DISTANCE 5
+#define DEF_DISTANCE 12
 #define SIMULATION_RATE 5
 #define SIMULATION_INTERVAL_US (1000000 / SIMULATION_RATE)
 #define DEF_START_VELOCITY (SIMULATION_RATE * DEF_ACCELERATION)
@@ -36,7 +35,7 @@ int initCrashSimulationThread(rtSimulationThread_t *p_thread, inputThread_t *p_i
 		return ret;
 	}
 	
-	ret = initSimulation(&p_thread->simulation, DEF_DISTANCE, DEF_MIN_OBSTACLE_DISTANCE);
+	ret = initSimulation(&p_thread->simulation, DEF_DISTANCE);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init simulation (%d).\n", ret);
 		return ret;
@@ -99,7 +98,7 @@ static void drawSimulationThreadSafe(rtSimulationThread_t *p_thread, int p_statu
 	dist = p_thread->simulation.distance;
 	for(i = 0; i < OBSTACLE_COUNT; ++i) {
 		topObstalces[i] = p_thread->simulation.topPositions[i];
-		botObstalces[i] = p_thread->simulation.topPositions[i];
+		botObstalces[i] = p_thread->simulation.botPositions[i];
 	}
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
