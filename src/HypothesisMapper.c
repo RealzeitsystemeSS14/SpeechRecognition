@@ -41,11 +41,7 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		toLowerCase(hyp);
 		// check which command was called
 		PRINT_INFO("Hypothesis received: %s.\n", hyp);
-		if(strcmp(hyp, START_CMD) == 0)
-			startSimulation(p_mapper->simulationThread);
-		else if(strcmp(hyp, STOP_CMD) == 0)
-			stopSimulation(p_mapper->simulationThread);
-		else if(strcmp(hyp, RESET_CMD) == 0)
+		if(strcmp(hyp, RESET_CMD) == 0)
 			resetSimulation(p_mapper->simulationThread);
 		else if(strcmp(hyp, UP_CMD) == 0)
 			moveToPosition(p_mapper->simulationThread, TOP_POSITION);
@@ -53,7 +49,6 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 			moveToPosition(p_mapper->simulationThread, BOT_POSITION);
 		else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
-		
 		
 		//TODO STOP_TIME_TAKING(mapperExecutionTime);
 		//TODO STOP_TIME_TAKING(totalReactionTime);

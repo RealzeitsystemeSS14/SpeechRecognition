@@ -232,6 +232,7 @@ int resetSimulation(rtSimulationThread_t *p_thread)
 	pthread_mutex_lock(&p_thread->simulationMutex);
 	restartSimulation(&p_thread->simulation);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
+	startSimulation(p_thread);
 	
 	return 0;
 }
