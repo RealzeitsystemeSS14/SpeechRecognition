@@ -13,16 +13,22 @@ typedef struct {
 	int distance;
 	int position;
 	
-	int topPosition[OBSTACLE_COUNT];
-	int topWait[OBSTACLE_COUNT];
-	int botPosition[OBSTACLE_COUNT];
-	int botWait[OBSTACLE_COUNT];
+	int topPositions[OBSTACLE_COUNT];
+	int topRespawnTimes[OBSTACLE_COUNT];
+	int botPositions[OBSTACLE_COUNT];
+	int botRespawnTimes[OBSTACLE_COUNT];
+	
+	int minObstacleDistance;
+	int currentStep;
+	int lastRespawn;
+	
 } rtSimulation_t;
 
-int initSimulation(rtSimulation_t *p_simulation, int p_distance);
+int initSimulation(rtSimulation_t *p_simulation, int p_distance, int p_minObstacleDistance);
 
 /* stepSimulation() simulates one timestep.
  *  */
 int stepSimulation(rtSimulation_t *p_simulation);
+void restartSimulation(rtSimulation_t *p_simulation);
 
 #endif

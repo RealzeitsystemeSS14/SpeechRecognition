@@ -8,6 +8,7 @@
 #define GUI_WIDTH 640
 #define GUI_HEIGHT 480
 #define DEF_DISTANCE 8
+#define DEF_MIN_OBSTACLE_DISTANCE 5
 #define SIMULATION_RATE 5
 #define SIMULATION_INTERVAL_US (1000000 / SIMULATION_RATE)
 #define DEF_START_VELOCITY (SIMULATION_RATE * DEF_ACCELERATION)
@@ -35,7 +36,7 @@ int initCrashSimulationThread(rtSimulationThread_t *p_thread, inputThread_t *p_i
 		return ret;
 	}
 	
-	ret = initSimulation(&p_thread->simulation, DEF_DISTANCE);
+	ret = initSimulation(&p_thread->simulation, DEF_DISTANCE, DEF_MIN_OBSTACLE_DISTANCE);
 	if(ret != 0) {
 		PRINT_ERR("Failed to init simulation (%d).\n", ret);
 		return ret;
@@ -97,8 +98,8 @@ static void drawSimulationThreadSafe(rtSimulationThread_t *p_thread, int p_statu
 	pos = p_thread->simulation.position;
 	dist = p_thread->simulation.distance;
 	for(i = 0; i < OBSTACLE_COUNT; ++i) {
-		topObstalces[i] = p_thread->simulation.topPosition[i];
-		botObstalces[i] = p_thread->simulation.topPosition[i];
+		topObstalces[i] = p_thread->simulation.topPositions[i];
+		botObstalces[i] = p_thread->simulation.topPositions[i];
 	}
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
@@ -230,10 +231,7 @@ int resetSimulation(rtSimulationThread_t *p_thread)
 	int i;
 	stopSimulation(p_thread);
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	for(i = 0; i < OBSTACLE_COUNT; ++i) {
-		p_thread->simulation.topPosition[i] = p_thread->simulation.distance + 1;
-		p_thread->simulation.botPosition[i] = p_thread->simulation.distance + 1;
-	}
+	restartSimulation(&p_thread->simulation);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
 	return 0;
