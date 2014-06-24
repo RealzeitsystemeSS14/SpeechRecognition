@@ -141,7 +141,7 @@ static void join()
 static void save() 
 {
 	PRINT_INFO("Saving results...\n");
-	saveTimeToFile("times.txt");
+	SAVE_TIMES_TO_FILE("times.txt");
 	PRINT_INFO("[Saved]\n");
 }
 

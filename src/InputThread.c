@@ -82,11 +82,12 @@ static int record(inputThread_t *p_thread)
         return ret;
 	}
 	
-	//TODO holdTimeTaking();
+	//TODO HOLD_TIME_TAKING(inputExecutionTime);
 	//check if not silent
 	while (((ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE)) == 0) && p_thread->keepRunning ) 
         usleep(10000);
-	//TODO resumeTimeTaking();
+	//TODO RESUME_TIME_TAKING(inputExecutionTime);
+	//TODO RESTART_TIME_TAKING(totalReactionTime);
 	ts = p_thread->contAudioDevice->read_ts;
 	p_thread->listenState = INPUT_PROCESSING;	
 	//add read audio data to audioBuffer
@@ -121,10 +122,10 @@ static int record(inputThread_t *p_thread)
     while (ad_read(p_thread->audioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE) >= 0);
     cont_ad_reset(p_thread->contAudioDevice);
 	
-	//TODO holdTimeTaking();
+	//TODO HOLD_TIME_TAKING(inputExecutionTime);
 	// enqueuing can also block
 	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
-	//TODO resumeTimeTaking();
+	//TODO RESUME_TIME_TAKING(inputExecutionTime);
 	
     return ret;
 }
@@ -190,9 +191,9 @@ static void* runThread(void * arg)
 	
 	while(sphinxThread->keepRunning) {
 		
-		//TODO restartTimeTaking();
+		//TODO RESTART_TIME_TAKING(inputExecutionTime);
 		sphinxThread->exitCode = record(sphinxThread);
-		//TODO stopTimeTaking();
+		//TODO STOP_TIME_TAKING(inputExecutionTime);
 		
 		// if decoding failed retry MAX_RETRIES times
 		if(sphinxThread->exitCode != 0)

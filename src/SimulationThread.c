@@ -78,9 +78,9 @@ int destroyCrashSimulationThread(rtSimulationThread_t *p_thread)
 
 static int stepSimulationThreadSafe(rtSimulationThread_t *p_thread)
 {
-	//TODO holdTimeTaking();
+	HOLD_TIME_TAKING(simulationExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	//TODO resumeTimeTaking();
+	RESUME_TIME_TAKING(simulationExecutionTime);
 	int ret = stepSimulation(&p_thread->simulation);
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	return ret;
@@ -91,9 +91,9 @@ static void drawSimulationThreadSafe(rtSimulationThread_t *p_thread, int p_statu
 	int topObstalces[OBSTACLE_COUNT];
 	int botObstalces[OBSTACLE_COUNT];
 	int pos, dist, i;
-	//TODO holdTimeTaking();
+	HOLD_TIME_TAKING(simulationExecutionTime);
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	//TODO resumeTimeTaking();
+	RESUME_TIME_TAKING(simulationExecutionTime);
 	pos = p_thread->simulation.position;
 	dist = p_thread->simulation.distance;
 	for(i = 0; i < OBSTACLE_COUNT; ++i) {
@@ -151,7 +151,7 @@ static void* runThread(void *arg)
 	}
 	
 	while(simulationThread->keepRunning) {
-		//TODO restartTimeTaking();
+		RESTART_TIME_TAKING(simulationExecutionTime);
 		if(simulationThread->simulate) {
 			// simulate the crash simulation for one timestep
 			ret = stepSimulationThreadSafe(simulationThread);
@@ -159,7 +159,7 @@ static void* runThread(void *arg)
 				stopSimulation(simulationThread);
 		}
 		drawSimulationThreadSafe(simulationThread, ret);
-		//TODO stopTimeTaking();
+		STOP_TIME_TAKING(simulationExecutionTime);
 		
 		simulationThread->exitCode = sleepRate(&loopRate);
 		if(simulationThread->exitCode != 0) {
@@ -239,7 +239,8 @@ int resetSimulation(rtSimulationThread_t *p_thread)
 int moveToPosition(rtSimulationThread_t *p_thread, int p_position)
 {
 	pthread_mutex_lock(&p_thread->simulationMutex);
-	p_thread->simulation.position = p_position;
+	if(p_thread->simulate)
+		p_thread->simulation.position = p_position;
 	pthread_mutex_unlock(&p_thread->simulationMutex);
 	
 	return 0;

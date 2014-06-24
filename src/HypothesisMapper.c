@@ -3,6 +3,7 @@
 #include "HypothesisMapper.h"
 #include "StringPool.h"
 #include "Utils.h"
+#include "TimeTaking.h"
 
 #define STOP_CMD "stop"
 #define START_CMD "start"
@@ -35,7 +36,7 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 		if(hyp == poisonPill)
 			continue;
 		
-		restartTimeTaking();
+		//TODO RESTART_TIME_TAKING(mapperExecutionTime);
 		//change hypothesis to lower case, to make compare case insensitive
 		toLowerCase(hyp);
 		// check which command was called
@@ -52,8 +53,10 @@ int loopHypothesisMapper(hypothesisMapper_t *p_mapper)
 			moveToPosition(p_mapper->simulationThread, BOT_POSITION);
 		else
 			PRINT_INFO("Received unknown hypothesis: %s.\n", hyp);
-			
-		stopTimeTaking();
+		
+		
+		//TODO STOP_TIME_TAKING(mapperExecutionTime);
+		//TODO STOP_TIME_TAKING(totalReactionTime);
 		releaseString(hyp);
 	}
 	
