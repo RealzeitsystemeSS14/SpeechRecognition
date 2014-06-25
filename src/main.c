@@ -1,4 +1,7 @@
 #include <signal.h>
+#include <sys/mman.h>
+#include <string.h>
+#include <errno.h>
 #include "InputThread.h"
 #include "InterpreterThread.h"
 #include "SimulationThread.h"
@@ -48,6 +51,12 @@ static void closeApplication()
 
 static int init()
 {	
+	
+	if(mlockall(MCL_FUTURE) != 0) {
+		PRINT_ERR("Failed to mlockall: %s.\n",strerror(errno));
+		return -1;
+	}
+	
 	initTimeTaking();
 	
 	err_set_logfp(fopen("/dev/null", "w"));
