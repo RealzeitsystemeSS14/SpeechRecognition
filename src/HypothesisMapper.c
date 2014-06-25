@@ -8,7 +8,7 @@
 #define STOP_CMD "stop"
 #define START_CMD "run"
 #define RESET_CMD "reset"
-#define FLIP_CMD "flip"
+#define FLIP_CMD "move"
 
 #define POISON_PILL "poisonPill"
 static char *poisonPill = POISON_PILL;
