@@ -4,6 +4,7 @@
 #include "StringPool.h"
 #include "Utils.h"
 #include "RTScheduling.h"
+#include "TimeTaking.h"
 
 static audioBuffer_t poisonPill;
 
@@ -79,9 +80,9 @@ static int interprete(interpreterThread_t * p_thread, audioBuffer_t *buffer, cha
         PRINT_ERR("Failed to get hypothesis.\n");
         return -1;
     }
-	//TODO HOLD_TIME_TAKING(interpreterExecutionTime);
+	//EXEC HOLD_TIME_TAKING(interpreterExecutionTime);
 	*p_outHyp = reserveString();
-	//TODO RESUME_TIME_TAKING(interpreterExecutionTime);
+	//EXEC RESUME_TIME_TAKING(interpreterExecutionTime);
 	strcpy(*p_outHyp, hyp);
 	
 	return 0;
@@ -102,17 +103,19 @@ static void* runThread(void * arg)
 		// start next iteration if received poison pill -> keepRunning should be false now
 		if(buffer == &poisonPill)
 			continue;
-		//TODO RESTART_TIME_TAKING(interpreterExecutionTime);
+		//EXEC RESTART_TIME_TAKING(interpreterExecutionTime);
 		if(buffer->size != 0) {
 			interpreterThread->exitCode = interprete(interpreterThread, buffer, &hyp);
 			if(interpreterThread->exitCode == 0) {
-				//TODO HOLD_TIME_TAKING(interpreterExecutionTime);
+				//EXEC HOLD_TIME_TAKING(interpreterExecutionTime);
+				RESTART_TIME_TAKING(mapperReactionTime);
 				// enqueue can also block
 				enqueueBlockingQueue(interpreterThread->hypQueue, (void*) hyp);
-				//TODO RESUME_TIME_TAKING(interpreterExecutionTime);
+				//EXEC RESUME_TIME_TAKING(interpreterExecutionTime);
 			}
+			STOP_TIME_TAKING(interpreterReactionTime);
 		}
-		//TODO STOP_TIME_TAKING(interpreterExecutionTime);
+		//EXEC STOP_TIME_TAKING(interpreterExecutionTime);
 		releaseAudioBuffer(buffer);
 	}
 	interpreterThread->running = 0;

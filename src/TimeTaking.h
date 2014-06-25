@@ -26,6 +26,11 @@ extern struct timeElement inputExecutionTime;
 extern struct timeElement interpreterExecutionTime;
 extern struct timeElement simulationExecutionTime;
 extern struct timeElement mapperExecutionTime;
+
+extern struct timeElement inputReactionTime;
+extern struct timeElement interpreterReactionTime;
+extern struct timeElement simulationReactionTime;
+extern struct timeElement mapperReactionTime;
 extern struct timeElement totalReactionTime;
 
 int initTimeTaking();

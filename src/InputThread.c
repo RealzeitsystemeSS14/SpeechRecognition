@@ -53,85 +53,6 @@ int destroyInputThread(inputThread_t *p_thread)
 	return result;
 }
 
-static int32 sphinxTimestampDiff(int32 p_begin, int32 p_end)
-{
-	int32 result = p_end - p_begin;
-	if(p_end < p_begin)
-		result = result + MAX_INT32 + 1;
-	return result;
-}
-
-static int record(inputThread_t *p_thread)
-{
-    int ret = 0;
-	int32 ts;
-	//get audioBuffer for audioQueue
-	audioBuffer_t *resultBuf = reserveAudioBuffer();
-	
-	ret = initAudioBuffer(resultBuf);
-	if(ret != 0) {
-		PRINT_ERR("Failed to init resultBuf %d).\n", ret);
-		return ret;
-	}
-	
-	//start recording from audiodevice
-	p_thread->listenState = INPUT_LISTENING;
-	ret = ad_start_rec(p_thread->audioDevice);
-    if (ret < 0) {
-		PRINT_ERR("Could not start recording audio (%d).\n", ret);
-        return ret;
-	}
-	
-	//TODO HOLD_TIME_TAKING(inputExecutionTime);
-	//check if not silent
-	while (((ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE)) == 0) && p_thread->keepRunning ) 
-        usleep(10000);
-	//TODO RESUME_TIME_TAKING(inputExecutionTime);
-	//TODO RESTART_TIME_TAKING(totalReactionTime);
-	ts = p_thread->contAudioDevice->read_ts;
-	p_thread->listenState = INPUT_PROCESSING;	
-	//add read audio data to audioBuffer
-	addAudioBuffer(resultBuf, p_thread->inputBuffer, ret);
-	
-	
-    while(p_thread->keepRunning) {
-        ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE);
-
-        if (ret < 0) {
-			//something went wrong
-            PRINT_ERR("Failed to record audio (%d).\n", ret);
-            break;
-        } else if(ret > 0) {
-            // valid speech data read
-			// get new timestamp
-			ts = p_thread->contAudioDevice->read_ts;
-            addAudioBuffer(resultBuf, p_thread->inputBuffer, ret);
-			if(isFullAudioBuffer(resultBuf)) {
-				PRINT_INFO("AudioBuffer is full!\n");
-				break;
-			}
-        } else {
-            //no data
-			if(sphinxTimestampDiff(ts, p_thread->contAudioDevice->read_ts) >= MS_TO_SAMPLES(SILENCE_MS))
-				break;
-			else
-				usleep(10000);
-        }
-    }
-    
-    ad_stop_rec(p_thread->audioDevice);
-	p_thread->listenState = INPUT_WAITING;
-    while (ad_read(p_thread->audioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE) >= 0);
-    cont_ad_reset(p_thread->contAudioDevice);
-	
-	//TODO HOLD_TIME_TAKING(inputExecutionTime);
-	// enqueuing can also block
-	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
-	//TODO RESUME_TIME_TAKING(inputExecutionTime);
-	
-    return ret;
-}
-
 static int openAudioDevice(inputThread_t *p_thread)
 {
 	int ret;
@@ -176,6 +97,88 @@ static void closeAudioDevice(inputThread_t *p_thread)
     ad_close(p_thread->audioDevice);
 }
 
+static int32 sphinxTimestampDiff(int32 p_begin, int32 p_end)
+{
+	int32 result = p_end - p_begin;
+	if(p_end < p_begin)
+		result = result + MAX_INT32 + 1;
+	return result;
+}
+
+static int record(inputThread_t *p_thread)
+{
+    int ret = 0;
+	int32 ts;
+	//get audioBuffer for audioQueue
+	audioBuffer_t *resultBuf = reserveAudioBuffer();
+	
+	ret = initAudioBuffer(resultBuf);
+	if(ret != 0) {
+		PRINT_ERR("Failed to init resultBuf %d).\n", ret);
+		return ret;
+	}
+	
+	//start recording from audiodevice
+	p_thread->listenState = INPUT_LISTENING;
+	ret = ad_start_rec(p_thread->audioDevice);
+    if (ret < 0) {
+		PRINT_ERR("Could not start recording audio (%d).\n", ret);
+        return ret;
+	}
+	
+	//EXEC HOLD_TIME_TAKING(inputExecutionTime);
+	//check if not silent
+	while (((ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE)) == 0) && p_thread->keepRunning ) 
+        usleep(10000);
+	//EXEC RESUME_TIME_TAKING(inputExecutionTime);
+	RESTART_TIME_TAKING(totalReactionTime);
+	RESTART_TIME_TAKING(inputReactionTime);
+	ts = p_thread->contAudioDevice->read_ts;
+	p_thread->listenState = INPUT_PROCESSING;	
+	//add read audio data to audioBuffer
+	addAudioBuffer(resultBuf, p_thread->inputBuffer, ret);
+	
+	
+    while(p_thread->keepRunning) {
+        ret = cont_ad_read(p_thread->contAudioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE);
+
+        if (ret < 0) {
+			//something went wrong
+            PRINT_ERR("Failed to record audio (%d).\n", ret);
+            break;
+        } else if(ret > 0) {
+            // valid speech data read
+			// get new timestamp
+			ts = p_thread->contAudioDevice->read_ts;
+            addAudioBuffer(resultBuf, p_thread->inputBuffer, ret);
+			if(isFullAudioBuffer(resultBuf)) {
+				PRINT_INFO("AudioBuffer is full!\n");
+				break;
+			}
+        } else {
+            //no data
+			if(sphinxTimestampDiff(ts, p_thread->contAudioDevice->read_ts) >= MS_TO_SAMPLES(SILENCE_MS))
+				break;
+			else
+				usleep(10000);
+        }
+    }
+    
+    ad_stop_rec(p_thread->audioDevice);
+	p_thread->listenState = INPUT_WAITING;
+    while (ad_read(p_thread->audioDevice, p_thread->inputBuffer, INPUT_BUFFER_SIZE) >= 0);
+    cont_ad_reset(p_thread->contAudioDevice);
+	
+	//EXEC HOLD_TIME_TAKING(inputExecutionTime);
+	RESTART_TIME_TAKING(interpreterReactionTime);
+	// enqueuing can also block
+	enqueueBlockingQueue(p_thread->audioQueue, (void*) resultBuf);
+	//EXEC RESUME_TIME_TAKING(inputExecutionTime);
+	STOP_TIME_TAKING(inputReactionTime);
+	
+    return ret;
+}
+
 static void* runThread(void * arg)
 {
 	inputThread_t *sphinxThread = (inputThread_t*) arg;
@@ -193,9 +196,9 @@ static void* runThread(void * arg)
 	
 	while(sphinxThread->keepRunning) {
 		
-		//TODO RESTART_TIME_TAKING(inputExecutionTime);
+		//EXEC RESTART_TIME_TAKING(inputExecutionTime);
 		sphinxThread->exitCode = record(sphinxThread);
-		//TODO STOP_TIME_TAKING(inputExecutionTime);
+		//EXEC STOP_TIME_TAKING(inputExecutionTime);
 		
 		// if decoding failed retry MAX_RETRIES times
 		if(sphinxThread->exitCode != 0)

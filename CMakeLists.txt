@@ -27,6 +27,9 @@ if (sphinx_FOUND AND ALLEGRO_FOUND)
     add_executable(testSphinx "src/test/testSphinx.c")
     target_link_libraries(testSphinx ${sphinx_LIBRARIES})
     
+    add_executable(doSomeWork "src/test/doSomeWork.c")
+    add_executable(doSomeIO "src/test/doSomeIO.c")
+    
     add_executable(onButtonSphinx "src/test/onButtonSphinx.c")
     target_link_libraries(onButtonSphinx ${sphinx_LIBRARIES})
     

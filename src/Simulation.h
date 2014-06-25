@@ -18,7 +18,7 @@ typedef struct {
 	int botPositions[OBSTACLE_COUNT];
 	int botRespawnTimes[OBSTACLE_COUNT];
 	
-	int lastRespawnTime;
+	int lastRespawn;
 	int currentStep;
 } rtSimulation_t;
 
