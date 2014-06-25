@@ -55,8 +55,8 @@ static int init()
 	PRINT_INFO("Getting Config...\n");
     config = cmd_ln_init(NULL, ps_args(), TRUE,
                          "-hmm", MODELDIR "/hmm/en_US/hub4wsj_sc_8k",
-                         "-lm", "7600.lm",
-                         "-dict", "7600.dic",
+                         "-lm", "1898.lm",
+                         "-dict", "1898.dic",
 						 "-ds", "2",
 						 "-topn", "2",
 						 "-maxwpf", "5",

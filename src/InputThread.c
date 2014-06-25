@@ -106,8 +106,10 @@ static int record(inputThread_t *p_thread)
 			// get new timestamp
 			ts = p_thread->contAudioDevice->read_ts;
             addAudioBuffer(resultBuf, p_thread->inputBuffer, ret);
-			if(isFullAudioBuffer(resultBuf))
+			if(isFullAudioBuffer(resultBuf)) {
 				PRINT_INFO("AudioBuffer is full!\n");
+				break;
+			}
         } else {
             //no data
 			if(sphinxTimestampDiff(ts, p_thread->contAudioDevice->read_ts) >= MS_TO_SAMPLES(SILENCE_MS))
