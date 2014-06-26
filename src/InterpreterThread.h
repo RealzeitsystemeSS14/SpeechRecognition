@@ -1,6 +1,6 @@
-/* The InterpreterThread takes audio data from the given audioQueue
- * and interpretes it. A String hypothesis is created and queued in the given
- * hypQueue.
+/* The InterpreterThread takes audio data from the audioQueue and interpretes it.
+ * A string hypothesis is created and queued in the hypQueue.
+ * The string is reserved from the global StringPool. 
  * All functions return 0 on success.*/
 
 #ifndef INTERPRETER_THREAD_H_

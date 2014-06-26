@@ -1,3 +1,7 @@
+/* This component provides several intialization functions to
+ * create realtime mutexes and threads.
+ * All functions return 0 on success. */
+
 #ifndef RT_SCHEDULING_H
 #define RT_SCHEDULING_H
 

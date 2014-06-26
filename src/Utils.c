@@ -94,9 +94,11 @@ int sleepRate(rate_t* p_rate)
 	p_rate->lastDiffUS = getWatchUSec(&p_rate->watch);
 	intervalUsec = USEC_PER_SEC / p_rate->targetRate;
 	
+	// if time since last call was not long enough, sleep the remaining time
 	if(p_rate->lastDiffUS < intervalUsec)
 		usleep(intervalUsec - p_rate->lastDiffUS);
 	
+	// restart watch until next call
 	resetWatch(&p_rate->watch);
 	ret = startWatch(&p_rate->watch);
 	if(ret != 0)

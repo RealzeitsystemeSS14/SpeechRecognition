@@ -1,3 +1,7 @@
+/* The simulation drawer visualizes the simualtion on the
+ * screen. Allegro is used to draw in a window.
+ * All functions return 0 on success. */
+
 #ifndef SIMULATION_DRAWER_H_
 #define SIMULATION_DRAWER_H_
 

@@ -1,7 +1,7 @@
 /* The StringPool reserves memory at its loading time.
- * Its string elements can be accessed with the function getString().
+ * Its string elements can be accessed with the function reserveString().
  * The pool is fixed size, hence if all elements are reserved the caller of
- * getString() will block.
+ * reserveString() will block.
  * Use releaseString() to mark a String as free again. */
 
 #ifndef STRING_POOL_H

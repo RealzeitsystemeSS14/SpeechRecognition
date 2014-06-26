@@ -1,3 +1,6 @@
+/* The Utils component contains several functions and strcuts,
+ * which come in handy in every day use. */
+
 #ifndef UTILS_H_
 #define UTILS_H_
 

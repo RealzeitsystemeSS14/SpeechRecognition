@@ -1,6 +1,10 @@
-/* The InputThread records incoming audio data. Recording can be controlled
- * with startRecording() and stopRecording().
- * The received data (after stopRecording()), is queued in the given BlockingQueue.
+/* The InputThread records incoming audio data. Recording is started when first audio
+ * smaples are received. After a certain time of silence or if the AudioBuffer is full,
+ * the recording is stopped.
+ * The received data is queued in the audioQueue.
+ * The audio device which is initialized by sphinx, uses its own internal thread to poll
+ * data from the hardware device. Hence the audio device strcut has to be initialized from
+ * within the InputThread, so it inherits the correct thread attributes.
  * All functions return 0 on success. */
  
 #ifndef INPUT_THREAD_H_

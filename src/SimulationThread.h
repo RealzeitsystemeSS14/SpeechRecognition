@@ -1,4 +1,5 @@
-/* The CrashSimulationThread runs at a fixe rate and simulates a crash test with a car.
+/* The CrashSimulationThread runs at a fixes rate and simulates a simple reaction game.
+ * The player has to evade moving obstacles.
  * This thread handles the simulation logic as well as redrawing the GUI.
  * All functions return 0 on success.*/
 

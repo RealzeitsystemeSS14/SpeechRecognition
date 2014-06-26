@@ -163,6 +163,9 @@ static void destroy()
 	destroyBlockingQueue(&audioQueue, 0);
 	destroyBlockingQueue(&hypQueue, 0);
 	
+	destroyStringPool();
+	destroyAudioBufferPool();
+	
 	cmd_ln_free_r(config);
 	
 	PRINT_INFO("[Destroyed]\n");

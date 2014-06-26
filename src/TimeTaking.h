@@ -1,3 +1,9 @@
+/* The TimeTaking component is used to take worst case times of tasks
+ * and critical sections.
+ * By defining "TAKE_TIME" TimeTaking can be enabled.
+ * Use HOLD_TIME_TAKING() to stop the watch temporarily and then RESUME_TIME_TAKING()
+ * to start it again. */
+
 #ifndef TIME_TAKING_H
 #define TIME_TAKING_H
 
