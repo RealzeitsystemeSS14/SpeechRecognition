@@ -16,9 +16,24 @@ add_definitions(-DMODELDIR=${MODELDIR} -DTAKE_TIME -D_GNU_SOURCE)
 pkg_check_modules(sphinx REQUIRED pocketsphinx sphinxbase)
 find_package(Allegro REQUIRED)
 
+get_filename_component(INIPARSER_LIB_DIR "lib/iniparser" ABSOLUTE)
+get_filename_component(INIPARSER_INCLUDE_DIR "lib/iniparser/src" ABSOLUTE)
+
+if (IS_DIRECTORY ${INIPARSER_LIB_DIR})
+
+    include_directories(${INIPARSER_INCLUDE_DIR})
+    link_directories(${INIPARSER_LIB_DIR})
+    
+    add_executable(realzeitNachweis "src/test/realzeitNachweis.c")
+    target_link_libraries(realzeitNachweis iniparser m)
+
+endif (IS_DIRECTORY ${INIPARSER_LIB_DIR})
+
 if (sphinx_FOUND AND ALLEGRO_FOUND)
+
     include_directories(${sphinx_INCLUDE_DIRS} ${ALLEGRO_INCLUDE_DIR})
-    link_directories(${sphinx_LIBRARY_DIRS}})
+    link_directories(${sphinx_LIBRARY_DIRS})
+    
     set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} ${sphinx_CFLAGS})
 
     add_executable(recordCommand "src/test/recordCommand.c")

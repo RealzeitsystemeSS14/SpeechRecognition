@@ -55,10 +55,6 @@ static void moveObstacles(rtSimulation_t *p_simulation, int p_position)
 
 int stepSimulation(rtSimulation_t *p_simulation)
 {
-	// move obstacles
-	moveObstacles(p_simulation, TOP_POSITION);
-	moveObstacles(p_simulation, BOT_POSITION);
-	
 	int i;
 	// check if we hit an obstacle
 	for(i = 0; i < OBSTACLE_COUNT; ++i) {
@@ -70,6 +66,10 @@ int stepSimulation(rtSimulation_t *p_simulation)
 				return 1;
 		}
 	}
+	
+	// move obstacles
+	moveObstacles(p_simulation, TOP_POSITION);
+	moveObstacles(p_simulation, BOT_POSITION);
 	
 	++p_simulation->currentStep;
 	return 0;
