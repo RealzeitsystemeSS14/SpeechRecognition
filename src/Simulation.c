@@ -6,7 +6,7 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MIN_RESPAWN_TIME 5
 #define MAX_WAIT 3
-#define SPAWN_OFFSET 6
+#define SPAWN_OFFSET 7
 
 int initSimulation(rtSimulation_t *p_simulation, int p_distance)
 {		

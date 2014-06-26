@@ -128,6 +128,10 @@ int main(int argc, char **argv)
 	}
 	
 	file = iniparser_load(argv[1]);
+	if(file == NULL) {
+		fprintf(stderr, "Kann die Datei nicht parsen. Existiert sie ueberhaupt?\n");
+		return -1;
+	}
 	
 	parseFile();
 	hinreichenderTestMR();
