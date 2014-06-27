@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root text="&#34;Mapper Task&#34;" comment="&#34;&#34;" color="ffffff" type="program" style="nice">
+<root text="&#34;Mapper Task&#34;" comment="" color="ffffff" type="program" style="nice">
 	<children>
-		<instruction text="&#34;hyp = dequeue(hypQueue);&#34;" comment="&#34;&#34;" color="ffffff" rotated="0"></instruction>
-		<case text="&#34;hyp&#34;,&#34;run&#34;,&#34;stop&#34;,&#34;move&#34;,&#34;reset&#34;" comment="&#34;&#34;" color="ffffff">
+		<instruction text="&#34;hyp = dequeue(hypQueue);&#34;" comment="" color="ffffff" rotated="0"></instruction>
+		<case text="&#34;hyp&#34;,&#34;run&#34;,&#34;stop&#34;,&#34;move&#34;,&#34;reset&#34;,&#34;default&#34;" comment="&#34;&#34;" color="ffffff">
 			<qCase>
-				<instruction text="&#34;start(simulation);&#34;" comment="&#34;&#34;" color="ffffff" rotated="0"></instruction>
+				<instruction text="&#34;start(simulation);&#34;" comment="" color="ffffff" rotated="0"></instruction>
 			</qCase>
 			<qCase>
-				<instruction text="&#34;stop(simulation);&#34;" comment="&#34;&#34;" color="ffffff" rotated="0"></instruction>
+				<instruction text="&#34;stop(simulation);&#34;" comment="" color="ffffff" rotated="0"></instruction>
 			</qCase>
 			<qCase>
-				<instruction text="&#34;movePlayer(simulation);&#34;" comment="&#34;&#34;" color="ffffff" rotated="0"></instruction>
+				<instruction text="&#34;movePlayer(simulation);&#34;" comment="" color="ffffff" rotated="0"></instruction>
 			</qCase>
 			<qCase>
-				<instruction text="&#34;reset(simulation);&#34;" comment="&#34;&#34;" color="ffffff" rotated="0"></instruction>
+				<instruction text="&#34;reset(simulation);&#34;" comment="" color="ffffff" rotated="0"></instruction>
+			</qCase>
+			<qCase>
+				<instruction text="&#34;print(&#34;&#34;Unknown&#34;&#34;);&#34;" comment="&#34;&#34;" color="ffffff" rotated="0"></instruction>
 			</qCase>
 		</case>
-		<instruction text="&#34;releaseString(stringPool, hyp);&#34;" comment="&#34;&#34;" color="ffffff" rotated="0"></instruction>
+		<instruction text="&#34;releaseString(stringPool, hyp);&#34;" comment="" color="ffffff" rotated="0"></instruction>
 	</children>
 </root>
