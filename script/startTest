@@ -6,21 +6,39 @@ CURRDIR=$PWD
 cd $BASEDIR/../build
 
 echo "Start RTSpeech."
-./RTSpeech &
+./RTSpeech & > /dev/null
+
+RTPID=$!
 
 echo "Waiting some time..."
 sleep 5
 
 echo "Start memKill."
-./memKill &
+./memKill & > /dev/null
+
+MEMPID=$!
 
 cd ../script
 
 echo "Start doSomeWork."
-./doSomeWork &
+./doSomeWork & > /dev/null
+
+WORKPID=$!
 
 echo "Start doSomeIO."
-./doSomeIO &
+./doSomeIO & > /dev/null
+
+IOPID=$!
+
+echo "Press CTRL-C to stop."
+
+while true
+do
+    sleep 1
+done
+
+echo "Stopping processes."
+kill -9 $IOPID $WORKPID $MEMPID $RTPID
 
 echo "Done."
 
