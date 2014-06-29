@@ -8,37 +8,19 @@ cd $BASEDIR/../build
 echo "Start RTSpeech."
 ./RTSpeech &
 
-RTPID=$!
-
 echo "Waiting some time..."
 sleep 5
 
 echo "Start memKill."
 ./memKill &
 
-MEMPID=$!
-
 cd ../script
 
 echo "Start doSomeWork."
 ./doSomeWork &
 
-WORKPID=$!
-
 echo "Start doSomeIO."
 ./doSomeIO &
-
-IOPID=$!
-
-echo "Press CTRL-C to stop."
-
-while true
-do
-    sleep 1
-done
-
-echo "Stopping processes."
-kill -9 $IOPID $WORKPID $MEMPID $RTPID
 
 echo "Done."
 
