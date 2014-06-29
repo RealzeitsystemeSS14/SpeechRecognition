@@ -14,7 +14,7 @@ sleep 5
 echo "Start memKill."
 ./memKill &
 
-cd $BASEDIR
+cd ../script
 
 echo "Start doSomeWork."
 ./doSomeWork &
