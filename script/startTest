@@ -1,0 +1,31 @@
+#!/bin/bash
+
+BASEDIR=$(dirname $0)
+CURRDIR=$PWD
+
+cd $BASEDIR/../build
+
+echo "Start RTSpeech."
+./RTSpeech &
+
+echo "Waiting some time..."
+sleep 5
+
+echo "Start memKill."
+./memKill &
+
+cd $BASEDIR
+
+echo "Start doSomeWork."
+./doSomeWork &
+
+echo "Start doSomeIO."
+./doSomeIO &
+
+echo "Done."
+
+cd $CURRDIR
+
+
+
+
