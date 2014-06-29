@@ -6,7 +6,7 @@ CURRDIR=$PWD
 cd $BASEDIR/../build
 
 echo "Start RTSpeech."
-( ./RTSpeech & ) > /dev/null
+./RTSpeech &
 
 RTPID=$!
 
@@ -14,19 +14,19 @@ echo "Waiting some time..."
 sleep 5
 
 echo "Start memKill."
-( ./memKill & ) > /dev/null
+./memKill &
 
 MEMPID=$!
 
 cd ../script
 
 echo "Start doSomeWork."
-( ./doSomeWork & ) > /dev/null
+./doSomeWork &
 
 WORKPID=$!
 
 echo "Start doSomeIO."
-( ./doSomeIO & ) > /dev/null
+./doSomeIO &
 
 IOPID=$!
 
