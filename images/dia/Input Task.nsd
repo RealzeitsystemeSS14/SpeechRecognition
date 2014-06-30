@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root text="&#34;Input Task&#34;" comment="" color="ffffff" type="program" style="nice">
 	<children>
+		<instruction text="&#34;audioBuffer = reserveAudioBuffer(audioBufferPool);&#34;" comment="" color="ffffff" rotated="0"></instruction>
 		<while text="&#34;noAudioReceived()&#34;" comment="" color="ffffff">
 			<qWhile>
 				<instruction text="&#34;sleep();&#34;" comment="" color="ffffff" rotated="0"></instruction>
 			</qWhile>
 		</while>
-		<instruction text="&#34;audioBuffer = reserveAudioBuffer(audioBufferPool);&#34;" comment="" color="ffffff" rotated="0"></instruction>
 		<while text="&#34;true&#34;" comment="" color="ffffff">
 			<qWhile>
 				<instruction text="&#34;received = recordAudio(audioBuffer);&#34;" comment="" color="ffffff" rotated="0"></instruction>
