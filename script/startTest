@@ -11,9 +11,6 @@ echo "Start RTSpeech."
 echo "Waiting some time..."
 sleep 5
 
-echo "Start memKill."
-./memKill &
-
 cd ../script
 
 echo "Start doSomeWork."
